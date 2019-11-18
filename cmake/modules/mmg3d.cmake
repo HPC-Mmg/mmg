@@ -27,6 +27,9 @@
 ## =============================================================================
 
 SET(MMG3D_SOURCE_DIR      ${PROJECT_SOURCE_DIR}/src/mmg3d)
+# for -grid option
+SET(MMGS_SOURCE_DIR       ${PROJECT_SOURCE_DIR}/src/mmgs)
+
 SET(MMG3D_BINARY_DIR      ${PROJECT_BINARY_DIR}/src/mmg3d)
 SET(MMG3D_SHRT_INCLUDE    mmg/mmg3d )
 SET(MMG3D_INCLUDE         ${PROJECT_BINARY_DIR}/include/${MMG3D_SHRT_INCLUDE} )
@@ -44,6 +47,12 @@ GENERATE_FORTRAN_HEADER ( mmg3d
   ${MMG3D_SOURCE_DIR} libmmg3d.h
   ${MMG3D_SHRT_INCLUDE}
   ${MMG3D_BINARY_DIR} libmmg3df.h
+  )
+
+GENERATE_FORTRAN_HEADER ( mmgs_for_3d
+  ${MMGS_SOURCE_DIR} libmmgs.h
+  ${MMG3D_SHRT_INCLUDE}
+  ${MMG3D_BINARY_DIR} libmmgsf.h
   )
 
 ############################################################################
@@ -70,8 +79,10 @@ FILE(
   GLOB
   mmg3d_library_files
   ${MMG3D_SOURCE_DIR}/*.c
+  ${MMGS_SOURCE_DIR}/*.c
   ${COMMON_SOURCE_DIR}/*.c
   ${MMG3D_SOURCE_DIR}/inoutcpp_3d.cpp
+  ${MMGS_SOURCE_DIR}/inoutcpp_s.cpp
   )
 LIST(REMOVE_ITEM mmg3d_library_files
   ${MMG3D_SOURCE_DIR}/${PROJECT_NAME}3d.c
@@ -139,7 +150,9 @@ ENDIF()
 # mmg3d header files needed for library
 SET( mmg3d_headers
   ${MMG3D_SOURCE_DIR}/libmmg3d.h
+  ${MMGS_SOURCE_DIR}/libmmgs.h
   ${MMG3D_BINARY_DIR}/libmmg3df.h
+  ${MMG3D_BINARY_DIR}/libmmgsf.h
   ${COMMON_SOURCE_DIR}/libmmgtypes.h
   ${COMMON_BINARY_DIR}/libmmgtypesf.h
   )
@@ -148,6 +161,25 @@ SET( mmg3d_headers
 INSTALL(FILES ${mmg3d_headers} DESTINATION include/mmg/mmg3d COMPONENT headers)
 
 COPY_FORTRAN_HEADER_AND_CREATE_TARGET ( ${MMG3D_BINARY_DIR} ${MMG3D_INCLUDE} 3d )
+
+# Manually for mmgs header (because the macro impose the traget name)
+COPY_FORTRAN_HEADER (
+  ${COMMON_BINARY_DIR} libmmgtypesf.h
+  ${MMG3D_INCLUDE} libmmgtypesf.h
+  mmg_fortran_header copys_for_3d_libmmgtypesf )
+
+COPY_FORTRAN_HEADER (
+  ${MMG3D_BINARY_DIR}
+  libmmgsf.h ${MMG3D_INCLUDE}
+  libmmgsf.h
+  mmgs_for_3d_fortran_header copy_libmmgs_for_3df
+  )
+
+ADD_CUSTOM_TARGET(copy_s_for_3d_headers ALL
+  DEPENDS
+  copy_libmmgs_for_3df copys_for_3d_libmmgtypesf
+  ${MMG3D_INCLUDE}/libmmgs.h
+  ${MMG3D_INCLUDE}/libmmgtypes.h )
 
 # Copy header files in project directory at configuration step
 # (generated file don't exists yet or are outdated)

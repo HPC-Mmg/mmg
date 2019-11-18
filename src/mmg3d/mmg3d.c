@@ -33,6 +33,7 @@
  */
 
 #include "mmg3d.h"
+#include "mmg/mmg3d/libmmgs.h"
 
 mytime         MMG5_ctim[TIMEMAX];
 
@@ -286,7 +287,6 @@ int MMG3D_defaultOption(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
     _LIBMMG5_RETURN(mesh,met,sol,MMG5_SUCCESS);
 }
 
-
 /**
  * \param argc number of command line arguments.
  * \param argv command line arguments.
@@ -366,33 +366,72 @@ int main(int argc,char *argv[]) {
   fmtin = MMG5_Get_format(ptr,MMG5_FMT_MeditASCII);
 
   if ( mesh->info.grid ) {
-    if ( fmtin != MMG5_FMT_VtkVtk ) {
-      fprintf(stderr,"  ## Error: grid option available only with VTK structured input file\n");
-      MMG5_RETURN_AND_FREE(mesh,met,ls,disp,MMG5_STRONGFAILURE);
+    /* Grid + iso discretization: the grid is converted into an octree and
+     * merged in areas that doesn't intersect the ls. Only one "grid" file
+     * format is supported */
+    if ( mesh->info.iso ) {
+      if ( fmtin != MMG5_FMT_VtkVtk ) {
+        fprintf(stderr,"  ## Error: grid option available only with VTK structured input file\n");
+        MMG5_RETURN_AND_FREE(mesh,met,ls,disp,MMG5_STRONGFAILURE);
+      }
     }
+    /* otherwise the grid option enable the octree mesh generation and
+     * intersection with an immersed surface */
   }
 
   switch ( fmtin ) {
 
   case ( MMG5_FMT_GmshASCII ): case ( MMG5_FMT_GmshBinary ):
-    ier = MMG3D_loadMshMesh(mesh,sol,mesh->namein);
+    if ( mesh->info.grid ) {
+      /* octree for immersed surface */
+      assert ( !mesh->info.iso );
+      ier = MMGS_loadMshMesh(mesh,sol,mesh->namein);
+    }
+    else {
+      /* classical case */
+      ier = MMG3D_loadMshMesh(mesh,sol,mesh->namein);
+    }
     break;
 
   case ( MMG5_FMT_VtkVtu ):
-    ier = MMG3D_loadVtuMesh(mesh,sol,mesh->namein);
+    if ( mesh->info.grid ) {
+      /* octree for immersed surface */
+      assert ( !mesh->info.iso );
+      ier = MMGS_loadVtuMesh(mesh,sol,mesh->namein);
+    }
+    else {
+      /* classical case */
+      ier = MMG3D_loadVtuMesh(mesh,sol,mesh->namein);
+    }
     break;
 
   case ( MMG5_FMT_VtkVtk ):
     if ( mesh->info.grid ) {
-      ier = MMG3D_loadVTKGrid(mesh,sol,mesh->namein);
+      if ( mesh->info.iso )
+        /* octree for level-set discretization */{
+        ier = MMG3D_loadVTKGrid(mesh,sol,mesh->namein);
+      }
+      else {
+        /* octree for immersed surface */
+        ier = MMGS_loadVtkMesh(mesh,sol,mesh->namein);
+      }
     }
     else {
+      /* classical case */
       ier = MMG3D_loadVtkMesh(mesh,sol,mesh->namein);
     }
     break;
 
   case ( MMG5_FMT_MeditASCII ): case ( MMG5_FMT_MeditBinary ):
-    ier = MMG3D_loadMesh(mesh,mesh->namein);
+    if ( mesh->info.grid ) {
+      /* octree for immersed surface */
+      assert ( !mesh->info.iso );
+      ier = MMGS_loadMesh(mesh,mesh->namein);
+    }
+    else {
+      /* classical case */
+      ier = MMG3D_loadMesh(mesh,mesh->namein);
+    }
     if ( ier <  1 ) { break; }
 
     /* In Lagrangian mode, the name of the displacement file has been parsed in ls */
