@@ -61,7 +61,7 @@ int MMG3D_create_bbOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
   /* if mesh->info.delta==0 it means that the BB has not been computed */
   assert ( mesh->info.delta > 0.  );
 
-  printf("TO IMPLEMENT\n");
+  printf("\n %s:%d:\n%s: FUNCTION TO IMPLEMENT\n",__FILE__,__LINE__,__func__);
   return 0;
 
   return 1;
@@ -79,7 +79,7 @@ int MMG3D_create_bbOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
 static inline
 int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
 
-  printf("TO IMPLEMENT\n");
+  printf("\n %s:%d:\n%s: FUNCTION TO IMPLEMENT\n",__FILE__,__LINE__,__func__);
   return 0;
 
   return 1;
@@ -100,7 +100,7 @@ int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
 static inline
 int MMG3D_refine_octreeOnTria(MMG5_pMesh mesh, MMG5_pSol sol) {
 
-  printf("TO IMPLEMENT\n");
+  printf("\n %s:%d:\n%s: FUNCTION TO IMPLEMENT\n",__FILE__,__LINE__,__func__);
   return 0;
 
   return 1;
@@ -119,7 +119,7 @@ int MMG3D_refine_octreeOnTria(MMG5_pMesh mesh, MMG5_pSol sol) {
 static inline
 int MMG3D_balance_octree(MMG5_pMesh mesh, MMG5_pSol sol) {
 
-  printf("TO IMPLEMENT\n");
+  printf("\n %s:%d:\n%s: FUNCTION TO IMPLEMENT\n",__FILE__,__LINE__,__func__);
   return 0;
 
   return 1;
@@ -147,8 +147,9 @@ int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol) {
     return 0;
   }
 
-  /* Compute adjacency relationship */
-  if ( !MMGS_hashTria( mesh) ) {
+  /* Surface mesh analysis (adjacency relation, tria orientation, normal at
+   * points...) */
+  if ( !MMGS_analys( mesh) ) {
     fprintf(stderr,"\n  ## Hashing problem. Exit program.\n");
     return 0;
   }
