@@ -40,6 +40,10 @@
 
 #define MMG3D_IMMERSRAT 2 // ratio between the octree and the immersed surface
 
+#define MMG3D_MOCTREEDEPTHMAX 32 // maximal possible value to be able to store  nspan_at_root in an int32
+
+#define MMG3D_MOCTREENSPAN 4294967296 // 2^32 int32 max
+
 /**
  * \param mesh pointer toward a mesh structure.
  * \param sol pointer toward a solution structure.
@@ -51,18 +55,45 @@
  * size of MMG3D_IMMERSRAT \f$ \times \f$ the surface mesh bounding box and that
  * the immersed surface is centered inside the octree root.
  *
- * \remark the surface mesh must be scaled so the bounding box info have been
- * computed.
+ * \remark the surface mesh must be scaled, thus, the bounding box info is
+ * already computed.
  *
  */
 static inline
 int MMG3D_create_bbOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
+  MMG5_MOctree_s *po;
+  double         length[3],c[3];
+  int            ip;
 
   /* if mesh->info.delta==0 it means that the BB has not been computed */
   assert ( mesh->info.delta > 0.  );
 
-  printf("\n %s:%d:\n%s: FUNCTION TO IMPLEMENT\n",__FILE__,__LINE__,__func__);
-  return 0;
+  /** Set initial dimensions */
+
+  /* Octree size: squared for now but maybe we will need something smarter */
+  length[0] = length[1] = length[2] = MMG3D_IMMERSRAT;
+
+  /* Creation of the lower left bottom point of the octree root
+   * (c = - (length - 1)/2 ) */
+  c[0] = c[1] = c[2] = -0.5;
+  ip = MMG3D_newPt( mesh, c, 0);
+  if ( !ip ) {
+    MMG3D_POINT_REALLOC(mesh,sol,ip,mesh->gap,
+                        fprintf(stderr,"\n  ## Warning: %s: unable to"
+                                " allocate a new point\n",__func__);
+                        MMG5_INCREASE_MEM_MESSAGE();
+                        return 0;
+                        ,c,0);
+  }
+
+  /* Allocation of the octree root */
+  if ( !MMG3D_init_MOctree(mesh,&mesh->octree,ip,length,MMG3D_MOCTREEDEPTHMAX) )
+    return 0;
+
+  /* For now, the root is a leaf */
+  po = mesh->octree->root;
+  po->nsons = 0;
+  po->leaf=1;
 
   return 1;
 }
