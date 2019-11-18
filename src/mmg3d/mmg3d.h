@@ -211,7 +211,9 @@ int MMG3D_build_borders(MMG5_pMesh mesh, int* listip, int depth_max);
 int MMG3D_borders_delaunay( MMG5_pMesh mesh, MMG5_MOctree_s* q, int face_border, int depth_max, int *listip, int* i);
 int MMG5_delone_MOctree(MMG5_pMesh mesh,MMG5_pSol sol,int ip,int *list,int ilist);
 int MMG3D_locatePoint( MMG5_pMesh  mesh, MMG5_pPoint ppt );
+int MMG3D_delete_octree ( MMG5_pMesh mesh );
 
+int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol);
 
 
 /**

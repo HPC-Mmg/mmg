@@ -368,7 +368,6 @@ int MMG3D_delete_MOctree(MMG5_pMesh mesh, MMG5_MOctree_s* q) {
  * Delete the octree and free memory
  *
  */
-static inline
 int MMG3D_delete_octree ( MMG5_pMesh mesh ) {
 
   MMG3D_delete_MOctree(mesh,mesh->octree->root);
