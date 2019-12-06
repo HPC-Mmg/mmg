@@ -170,7 +170,6 @@ void MMG3D_freePROctree(MMG5_pMesh mesh,MMG3D_pPROctree *q)
 
 
 /**
- * \param q pointer toward the global PROctree.
  * \param ver coordinates of the point.
  * \param dim space dimension (should be 3).
  * \return the integer containing the coordinates
@@ -178,7 +177,7 @@ void MMG3D_freePROctree(MMG5_pMesh mesh,MMG3D_pPROctree *q)
  * Get the integer containing the coordinates
  *
  */
-int64_t MMG3D_getPROctreeCoordinate(MMG3D_pPROctree q, double* ver, int dim)
+int64_t MMG3D_getZCoordinate(double* ver, int dim)
 {
   int64_t s    = 1<<20;
   double  prec = 1./(1<<30);
@@ -229,9 +228,9 @@ int MMG3D_movePROctree(MMG5_pMesh mesh, MMG3D_pPROctree q, int no, double* newVe
   dim = mesh->dim;
 
   memcpy(&pt, oldVer ,dim*sizeof(double));
-  oldCoor = MMG3D_getPROctreeCoordinate(q, oldVer, dim);
+  oldCoor = MMG3D_getZCoordinate( oldVer, dim);
   memcpy(&pt, newVer ,dim*sizeof(double));
-  newCoor = MMG3D_getPROctreeCoordinate(q, mesh->point[no].c, dim);
+  newCoor = MMG3D_getZCoordinate(mesh->point[no].c, dim);
 
   if (newCoor == oldCoor) {
     return 1;
