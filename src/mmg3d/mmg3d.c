@@ -480,9 +480,11 @@ int main(int argc,char *argv[]) {
 
 
   if ( mesh->info.grid ) {
-    if ( mesh->info.iso && (!MMG3D_convert_grid2tetmesh(mesh,sol)) ) {
-      /* Conversion of grid into tetra mesh fail */
-      MMG5_RETURN_AND_FREE(mesh,met,ls,disp,MMG5_STRONGFAILURE);
+    if ( mesh->info.iso ) {
+      if ( !MMG3D_convert_grid2tetmesh(mesh,sol) ) {
+        /* Conversion of grid into tetra mesh fail */
+        MMG5_RETURN_AND_FREE(mesh,met,ls,disp,MMG5_STRONGFAILURE);
+      }
     }
     else if ( !MMG3D_octree_for_immersedBdy(mesh,sol)  ) {
       /* Octree refinement to capture immersed surface fail */
