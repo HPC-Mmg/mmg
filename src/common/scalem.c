@@ -175,14 +175,36 @@ int MMG5_scale_scalarMetric(MMG5_pMesh mesh, MMG5_pSol met, double dd,
  *
  * \return 1 if success, 0 if fail.
  *
- * Scale the mesh and the size informations between 0 and 1.
- * Compute a default value for the hmin/hmax parameters if needed.
+ * Scale the mesh and the size information between 0 and 1.  Compute a default
+ * value for the hmin/hmax parameters if needed.
  *
  */
-int MMG5_scale_meshAndSol(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol,double *dd,
-                          int8_t* sethmin,int8_t *sethmax ) {
+int MMG5_scale_meshAndSol(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol,
+                          double *dd,int8_t* sethmin,int8_t *sethmax ) {
+  return MMG5_scale_meshAndSol_i(mesh,met,sol,1.,dd,sethmin,sethmax );
+}
+
+/**
+ * \param mesh pointer toward the mesh structure.
+ * \param met pointer toward a metric
+ * \param sol pointer toward a solution structure (level-set or displacement).
+ * \param tgt targeted bb size (1 by default)
+ * \param dd pointer toward the scaling value (to fill)
+ * \param sethmin setted to 1 if hmin must not be computed from the metric.
+ * \param sethmax setted to 1 if hmax must not be computed from the metric.
+ *
+ * \return 1 if success, 0 if fail.
+ *
+ * Scale the mesh and the size information so at the end it is centered to 0.5
+ * and of amplitude \a tgt.  Compute a default value for the hmin/hmax
+ * parameters if needed.
+ *
+ */
+int MMG5_scale_meshAndSol_i(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol,double tgt,
+                            double *dd,int8_t* sethmin,int8_t *sethmax ) {
   MMG5_pPoint    ppt;
   MMG5_pPar      par;
+  double         tgt_min;
   int            k,i;
   int8_t         hsizOrOptim;
 
@@ -201,12 +223,13 @@ int MMG5_scale_meshAndSol(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol,double *dd
   if ( ! MMG5_boundingBox(mesh) ) return 0;
 
   /* normalize coordinates */
-  *dd = 1.0 / mesh->info.delta;
+  tgt_min = 0.5 * (1. - tgt);
+  *dd = tgt / mesh->info.delta;
   for (k=1; k<=mesh->np; k++) {
     ppt = &mesh->point[k];
     if ( !MG_VOK(ppt) )  continue;
     for (i=0 ; i<mesh->dim ; i++)
-      ppt->c[i] = (*dd) * (ppt->c[i] - mesh->info.min[i]);
+      ppt->c[i] = (*dd) * (ppt->c[i] - mesh->info.min[i]) + tgt_min;
   }
 
   mesh->info.hausd *= (*dd);
@@ -258,6 +281,7 @@ int MMG5_scale_meshAndSol(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol,double *dd
   return 1;
 
 }
+
 /**
  * \param mesh pointer toward the mesh structure.
  * \param met pointer toward the metric structure.
@@ -271,13 +295,31 @@ int MMG5_scale_meshAndSol(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol,double *dd
  *
  */
 int MMG5_scaleMesh(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
+  return MMG5_scaleMesh_i(mesh,met, sol,1.);
+}
+
+/**
+ * \param mesh pointer toward the mesh structure.
+ * \param met pointer toward the metric structure.
+ * \param sol pointer toward a solution structure (level-set or displacement).
+ * \param tgt targeted bounding box size (1 by default)
+ *
+ * \return 1 if success, 0 if fail (computed bounding box too small
+ * or one af the anisotropic input metric is not valid).
+ *
+ * Scale the mesh and the size informations so at the end, it is centered in 0.5
+ * and of amplitude \a tgt.
+ * Compute a default value for the hmin/hmax parameters if needed.
+ *
+ */
+int MMG5_scaleMesh_i(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol,double tgt) {
   double         dd,d1;
   int            k,i;
   double         *m;
   double         lambda[3],v[3][3],isqhmin,isqhmax;
   int8_t         sethmin,sethmax;
 
-  if ( !MMG5_scale_meshAndSol(mesh,met,sol,&dd,&sethmin,&sethmax) ) {
+  if ( !MMG5_scale_meshAndSol_i(mesh,met,sol,tgt,&dd,&sethmin,&sethmax) ) {
     return 0;
   }
 
@@ -391,18 +433,35 @@ int MMG5_scaleMesh(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
  *
  */
 int MMG5_unscaleMesh(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol) {
+  return MMG5_unscaleMesh_i(mesh,met,sol,1.);
+}
+
+/**
+ * \param mesh pointer toward the mesh structure.
+ * \param met pointer toward a metric.
+ * \param sol pointer toward a solution structure (level-set or displacement).
+ * \param tgt previously targetted mesh size.
+ *
+ * \return 1.
+ *
+ * Unscale the mesh and the size informations to their initial sizes.
+ *
+ */
+int MMG5_unscaleMesh_i(MMG5_pMesh mesh,MMG5_pSol met,MMG5_pSol sol,double tgt) {
   MMG5_pPoint     ppt;
-  double          dd;
+  double          dd,shift;
   int             k,i,iadr;
   MMG5_pPar       par;
 
   /* de-normalize coordinates */
-  dd = mesh->info.delta;
+  dd    = mesh->info.delta/tgt;
+  shift = 0.5*(dd-mesh->info.delta);
+
   for (k=1; k<=mesh->np; k++) {
     ppt = &mesh->point[k];
     if ( !MG_VOK(ppt) )  continue;
     for ( i=0; i<mesh->dim; ++i ) {
-      ppt->c[i] = ppt->c[i] * dd + mesh->info.min[i];
+      ppt->c[i] = ppt->c[i] * dd + mesh->info.min[i] - shift;
     }
   }
 
