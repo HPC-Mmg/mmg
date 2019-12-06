@@ -38,7 +38,7 @@
 #include "mmg3d.h"
 #include "../mmgs/mmgs.h"
 
-#define MMG3D_IMMERSRAT 2 // ratio between the octree and the immersed surface
+#define MMG3D_IMMERSRAT 0.5 // ratio between the immersed surface and the octree
 
 #define MMG3D_MOCTREEDEPTHMAX 15 // maximal possible value to be able to store  nspan_at_root in an int16
 
@@ -177,7 +177,7 @@ int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol) {
 
   /* Scale the input surface mesh between [0;1] (along the largest direction)
    * and compute the immersed mesh bounding box */
-  if ( !MMG5_scaleMesh( mesh, NULL,sol) ) {
+  if ( !MMG5_scaleMesh_i( mesh, NULL,sol,MMG3D_IMMERSRAT ) ) {
     fprintf(stderr,"\n  ## Mesh scaling problem. Exit program.\n");
     return 0;
   }
@@ -231,7 +231,7 @@ int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol) {
   }
 
   /* Unscale the surface mesh and the octree */
-  if ( !MMG5_unscaleMesh( mesh, NULL,sol) ) {
+  if ( !MMG5_unscaleMesh_i( mesh, NULL,sol,MMG3D_IMMERSRAT ) ) {
     fprintf(stderr,"\n  ## Mesh scaling problem. Exit program.\n");
     return 0;
   }
