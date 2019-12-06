@@ -504,13 +504,13 @@ typedef struct {
 
 /**
  *
- * MOctree cell: cellule for mesh generation from an octree
+ * MLSOctree cell: cellule for mesh generation from an octree
  *
  */
-typedef struct MMG5_MOctree_s
+typedef struct MMG5_MLSOctree_s
 {
-  struct MMG5_MOctree_s* father; /*!< pointer toward the father of the current cell */
-  struct MMG5_MOctree_s* sons; /*!< pointer toward the subtrees of the current cell */
+  struct MMG5_MLSOctree_s* father; /*!< pointer toward the father of the current cell */
+  struct MMG5_MLSOctree_s* sons; /*!< pointer toward the subtrees of the current cell */
   int    blf_ip; /*!< index of the bottom left front vertex of the octree cell */
   int    depth; /*!< depth of the cell in the octree */
   int8_t nsons; /*!< number of sons */
@@ -518,7 +518,7 @@ typedef struct MMG5_MOctree_s
   int8_t ghost; /*!< 1 if the cell is a ghost, 0 otherwise */
   int8_t split_ls; /*!< 1 if the level-set split this cell */
   int coordoct[3]; /*<coordinates of the bottom right hand front corner of the octree */
-} MMG5_MOctree_s;
+} MMG5_MLSOctree_s;
 
 /**
  * \struct PMMG_baryCoord
@@ -532,17 +532,17 @@ typedef struct {
 } MMG5_baryCoord;
 
 /**
- * MOctree global structure (enriched by global variables) for mesh generation
+ * MLSOctree global structure (enriched by global variables) for mesh generation
  * from an octree
  */
 typedef struct
 {
   double          length[3]; /*!< length of the octree in each direction */
-  MMG5_MOctree_s* root; /*!<  Pointer toward the first MOctree cell */
+  MMG5_MLSOctree_s* root; /*!<  Pointer toward the first MLSOctree cell */
   int             depth_max; /*!< Maximal depth of the octree */
   int             nspan_at_root; /*!< Number of span at root */
-} MMG5_MOctree;
-typedef MMG5_MOctree * MMG5_pMOctree;
+} MMG5_MLSOctree;
+typedef MMG5_MLSOctree * MMG5_pMLSOctree;
 
 
 /**
@@ -557,7 +557,7 @@ typedef struct {
   int       ver; /*!< Version of the mesh file */
   int       dim; /*!< Dimension of the mesh */
   int       type; /*!< Type of the mesh */
-  int       freeint[3]; /*!< For now used only by the MOctree to store the
+  int       freeint[3]; /*!< For now used only by the MLSOctree to store the
                          * number of cells in each directions */
   int       npi,nti,nai,nei,np,na,nt,ne,npmax,namax,ntmax,nemax,xpmax,xtmax;
   int       nquad,nprism; /* number of quadrangles and prisms */
@@ -595,7 +595,7 @@ typedef struct {
   MMG5_pQuad     quadra; /*!< Pointer toward the \ref MMG5_Quad structure */
   MMG5_pEdge     edge; /*!< Pointer toward the \ref MMG5_Edge structure */
   MMG5_HGeom     htab; /*!< \ref MMG5_HGeom structure */
-  MMG5_pMOctree  octree; /*!< Pointer toward a MMG5_MOctree structure */
+  MMG5_pMLSOctree  octree; /*!< Pointer toward a MMG5_MLSOctree structure */
   MMG5_Info      info; /*!< \ref MMG5_Info structure */
   char     *namein; /*!< Input mesh name */
   char     *nameout; /*!< Output mesh name */

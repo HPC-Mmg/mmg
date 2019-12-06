@@ -22,7 +22,7 @@
 */
 
 /**
- * \file MOctree_3d.c
+ * \file MLSOctree_3d.c
  * \brief Tools to manage an octree mesh.
  * \author Juliette Busquet (Enseirb-Matmeca)
  * \author Antoine Huc (Enseirb-Matmeca)
@@ -47,24 +47,24 @@
 
 /**
  * \param mesh pointer toward a MMG5 mesh
- * \param q pointer toward the MOctree root
+ * \param q pointer toward the MLSOctree root
  * \param ip index of the bottom-left-front corner of the root cell
  * \param length length of the octree in each direction
  * \param depth_max maximal depth of the octree
  *
  * \return 1 if success, 0 if fail.
  *
- * Allocate and init an MOctree structure.
+ * Allocate and init an MLSOctree structure.
  *
  */
-int MMG3D_init_MOctree  ( MMG5_pMesh mesh, MMG5_pMOctree *q, int ip,
+int MMG3D_init_MLSOctree  ( MMG5_pMesh mesh, MMG5_pMLSOctree *q, int ip,
                           double length[3],int depth_max ) {
 
 
   /** Root allocation */
-  MMG5_ADD_MEM(mesh,sizeof(MMG5_MOctree),"MOctree root",
+  MMG5_ADD_MEM(mesh,sizeof(MMG5_MLSOctree),"MLSOctree root",
                return 0);
-  MMG5_SAFE_MALLOC( *q,1, MMG5_MOctree, return 0);
+  MMG5_SAFE_MALLOC( *q,1, MMG5_MLSOctree, return 0);
 
   (*q)->length[0] = length[0];
   (*q)->length[1] = length[1];
@@ -75,12 +75,12 @@ int MMG3D_init_MOctree  ( MMG5_pMesh mesh, MMG5_pMOctree *q, int ip,
   (*q)->nspan_at_root = pow(2,depth_max);
 
   /** Check that we have enough memory to allocate a new cell */
-  MMG5_ADD_MEM(mesh,sizeof(MMG5_MOctree_s),"initial MOctree cell",
+  MMG5_ADD_MEM(mesh,sizeof(MMG5_MLSOctree_s),"initial MLSOctree cell",
                return 0);
 
   /** New cell allocation */
-  MMG5_SAFE_MALLOC( (*q)->root,1, MMG5_MOctree_s, return 0);
-  MMG3D_init_MOctree_s( mesh,(*q)->root,ip,0,0);
+  MMG5_SAFE_MALLOC( (*q)->root,1, MMG5_MLSOctree_s, return 0);
+  MMG3D_init_MLSOctree_s( mesh,(*q)->root,ip,0,0);
   (*q)->root->nsons = 0;
 
   return 1;
@@ -88,17 +88,17 @@ int MMG3D_init_MOctree  ( MMG5_pMesh mesh, MMG5_pMOctree *q, int ip,
 
 /**
  * \param mesh pointer toward the mesh structure
- * \param q pointer toward the MOctree cell
+ * \param q pointer toward the MLSOctree cell
  * \param ip index of the bottom-left-front corner of the cell
  * \param depth cell's depth
  * \param split_ls 1 if the cell is intersected by the level-set=0
  *
  * \return 1 if success, 0 if fail.
  *
- * Allocate and init an MOctree Cell
+ * Allocate and init an MLSOctree Cell
  *
  */
-int MMG3D_init_MOctree_s( MMG5_pMesh mesh, MMG5_MOctree_s* q,int ip, int depth,int8_t split_ls ) {
+int MMG3D_init_MLSOctree_s( MMG5_pMesh mesh, MMG5_MLSOctree_s* q,int ip, int depth,int8_t split_ls ) {
 
   q->father = NULL;
   q->sons   = NULL;
@@ -117,7 +117,7 @@ int MMG3D_init_MOctree_s( MMG5_pMesh mesh, MMG5_MOctree_s* q,int ip, int depth,i
 
 /**
  * \param mesh pointer toward the mesh structure
- * \param q pointer toward the MOctree cell
+ * \param q pointer toward the MLSOctree cell
  * \param sol pointer toward the solution structure.
  *
  * \return 1 if success, 0 if fail.
@@ -125,7 +125,7 @@ int MMG3D_init_MOctree_s( MMG5_pMesh mesh, MMG5_MOctree_s* q,int ip, int depth,i
  * Set the parameter split_ls of a leaf to 1 if the level-set=0 intersects the cell , 0 else .
  *
  */
-int  MMG3D_set_splitls_MOctree ( MMG5_pMesh mesh, MMG5_MOctree_s* q, MMG5_pSol sol) {
+int  MMG3D_set_splitls_MLSOctree ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q, MMG5_pSol sol) {
   int ip;
   int FDL,FDR,BDL,BDR,FUL,FUR,BUL,BUR;// ip of the 8 vertices of an octree cell
 
@@ -161,16 +161,16 @@ int  MMG3D_set_splitls_MOctree ( MMG5_pMesh mesh, MMG5_MOctree_s* q, MMG5_pSol s
 
 /**
  * \param mesh pointer toward the mesh structure
- * \param q pointer toward the MOctree cell
+ * \param q pointer toward the MLSOctree cell
  * \param sol pointer toward the solution structure.
  *
  * \return 1 if success, 0 if fail.
  *
- * Split an MOctree cell \ref q into \ref MMG3D_SIZE_OCTREESONS MOctree Cells.
+ * Split an MLSOctree cell \ref q into \ref MMG3D_SIZE_OCTREESONS MLSOctree Cells.
  * \ref q must be a leaf.
  *
  */
- int  MMG3D_split_MOctree_s ( MMG5_pMesh mesh,MMG5_MOctree_s* q,MMG5_pSol sol) {
+ int  MMG3D_split_MLSOctree_s ( MMG5_pMesh mesh,MMG5_MLSOctree_s* q,MMG5_pSol sol) {
    int i;
    int depth_max = mesh->octree->depth_max;
    int ncells_x = mesh->freeint[0];
@@ -180,12 +180,12 @@ int  MMG3D_set_splitls_MOctree ( MMG5_pMesh mesh, MMG5_MOctree_s* q, MMG5_pSol s
    if(q->depth < depth_max)
    {
      q->nsons = 8;
-     MMG5_ADD_MEM(mesh,q->nsons*sizeof(MMG5_MOctree_s),"MOctree sons",
+     MMG5_ADD_MEM(mesh,q->nsons*sizeof(MMG5_MLSOctree_s),"MLSOctree sons",
                   return 0);
-     MMG5_SAFE_MALLOC(q->sons,q->nsons, MMG5_MOctree_s, return 0);
+     MMG5_SAFE_MALLOC(q->sons,q->nsons, MMG5_MLSOctree_s, return 0);
      for(i=0; i<q->nsons; i++)
      {
-       MMG3D_init_MOctree_s(mesh, &q->sons[i], 0, q->depth + 1, 0);
+       MMG3D_init_MLSOctree_s(mesh, &q->sons[i], 0, q->depth + 1, 0);
 
        /*calculus of octree coordinates and ip*/
        int power = pow(2,depth_max-(q->depth+1));
@@ -238,7 +238,7 @@ int  MMG3D_set_splitls_MOctree ( MMG5_pMesh mesh, MMG5_MOctree_s* q, MMG5_pSol s
        {
          q->sons[i].ghost = 1;
        }
-       MMG3D_split_MOctree_s(mesh, &q->sons[i], sol);
+       MMG3D_split_MLSOctree_s(mesh, &q->sons[i], sol);
      }
    }
    else{
@@ -253,7 +253,7 @@ int  MMG3D_set_splitls_MOctree ( MMG5_pMesh mesh, MMG5_MOctree_s* q, MMG5_pSol s
        q->blf_ip=q->coordoct[2]*ncells_xy+q->coordoct[1]*ncells_x+q->coordoct[0]+1;
 
        if ( q->coordoct[0] < ncells_x-1 && q->coordoct[1] < ncells_y-1 && q->coordoct[2] < ncells_z-1 )
-         MMG3D_set_splitls_MOctree (mesh, q, sol);
+         MMG3D_set_splitls_MLSOctree (mesh, q, sol);
      }
      q->leaf=1;
    }
@@ -263,14 +263,14 @@ int  MMG3D_set_splitls_MOctree ( MMG5_pMesh mesh, MMG5_MOctree_s* q, MMG5_pSol s
 
 /**
  * \param mesh toward the mesh structure
- * \param q pointer toward the MOctree
+ * \param q pointer toward the MLSOctree
  *
  * \return 1 if success, 0 if fail.
  *
- * Free a MOctree.
+ * Free a MLSOctree.
  *
  */
-int MMG3D_free_MOctree  ( MMG5_pMOctree* q, MMG5_pMesh mesh) {
+int MMG3D_free_MLSOctree  ( MMG5_pMLSOctree* q, MMG5_pMesh mesh) {
 
   MMG5_DEL_MEM(mesh,(*q)->root);
 
@@ -281,14 +281,14 @@ int MMG3D_free_MOctree  ( MMG5_pMOctree* q, MMG5_pMesh mesh) {
 
 /**
  * \param mesh toward the mesh structure
- * \param q pointer toward the MOctree cell
+ * \param q pointer toward the MLSOctree cell
  *
  * \return 1 if success, 0 if fail.
  *
- * Free a MOctree cell: desallocate the cell sons
+ * Free a MLSOctree cell: desallocate the cell sons
  *
  */
-int MMG3D_free_MOctree_s( MMG5_MOctree_s* q, MMG5_pMesh mesh) {
+int MMG3D_free_MLSOctree_s( MMG5_MLSOctree_s* q, MMG5_pMesh mesh) {
 
   MMG5_DEL_MEM(mesh,q->sons);
   q->nsons = 0;
@@ -297,26 +297,26 @@ int MMG3D_free_MOctree_s( MMG5_MOctree_s* q, MMG5_pMesh mesh) {
 }
 
 /**
- * \param q pointer toward the MOctree cell
+ * \param q pointer toward the MLSOctree cell
  * \param mesh pointer toward the mesh structure
  *
  * \return 1 if success, 0 if fail.
  *
- * Merge the \ref q MOctree cell (remove the \ref MMG3D_SIZE OCTREESONS sons of
+ * Merge the \ref q MLSOctree cell (remove the \ref MMG3D_SIZE OCTREESONS sons of
  * \ref q, all sons being leaves).
  *
  */
-int  MMG3D_merge_MOctree_s ( MMG5_MOctree_s* q, MMG5_pMesh mesh) {
+int  MMG3D_merge_MLSOctree_s ( MMG5_MLSOctree_s* q, MMG5_pMesh mesh) {
 
   q->leaf = 1;
-  MMG3D_free_MOctree_s(q, mesh);
+  MMG3D_free_MLSOctree_s(q, mesh);
 
   return 1;
 }
 
 /**
  * \param mesh pointer toward the mesh structure
- * \param q pointer toward the MOctree cell
+ * \param q pointer toward the MLSOctree cell
  * \param span span between a corner and the other corner in one given direction
  * \param ip0 pointer toward the index of the bottom left front corner of the cell
  * \param ip1 pointer toward the index of the bottom right front corner of the cell
@@ -332,7 +332,7 @@ int  MMG3D_merge_MOctree_s ( MMG5_MOctree_s* q, MMG5_pMesh mesh) {
  * Compute the indices of the corners of the octree cell
  *
  */
-int MMG3D_get_MOctreeCornerIndices ( MMG5_pMesh mesh, MMG5_MOctree_s *q,int span,int *ip0,
+int MMG3D_get_MLSOctreeCornerIndices ( MMG5_pMesh mesh, MMG5_MLSOctree_s *q,int span,int *ip0,
                                      int *ip1, int *ip2,int *ip3,int *ip4,int *ip5,
                                      int *ip6,int *ip7 ) {
 
@@ -371,7 +371,7 @@ int MMG3D_get_MOctreeCornerIndices ( MMG5_pMesh mesh, MMG5_MOctree_s *q,int span
 }
 /**
  * \param mesh pointer toward the mesh
- * \param q pointer toward the MOctree cell
+ * \param q pointer toward the MLSOctree cell
  * \param span span between a corner and the other corner in one given direction
  * \param np pointer toward the number of used points
  * \param nc pointer toward the number of cell leaves
@@ -382,7 +382,7 @@ int MMG3D_get_MOctreeCornerIndices ( MMG5_pMesh mesh, MMG5_MOctree_s *q,int span
  * leaves. Count the number of used points and the number of leaves.
  *
  */
-int  MMG3D_mark_MOctreeCellCorners ( MMG5_pMesh mesh, MMG5_MOctree_s* q,int span,int *np,int *nc ) {
+int  MMG3D_mark_MLSOctreeCellCorners ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q,int span,int *np,int *nc ) {
   MMG5_pPoint ppt;
   int         i,ip[8];
   int ncells_x = mesh->freeint[0];
@@ -392,7 +392,7 @@ int  MMG3D_mark_MOctreeCellCorners ( MMG5_pMesh mesh, MMG5_MOctree_s* q,int span
   if ( q->leaf==1) {
     if(q->coordoct[0] < ncells_x-1 && q->coordoct[1] < ncells_y-1 && q->coordoct[2] < ncells_z-1)
     {
-      if ( !MMG3D_get_MOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
+      if ( !MMG3D_get_MLSOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
         fprintf(stderr,"\n  ## Error: %s: unable to compute the indices of the"
         " corners of the octree cell.\n",__func__);
         return 0;
@@ -412,7 +412,7 @@ int  MMG3D_mark_MOctreeCellCorners ( MMG5_pMesh mesh, MMG5_MOctree_s* q,int span
     span /= 2;
 
     for ( i=0; i<q->nsons; ++i ) {
-      if ( !MMG3D_mark_MOctreeCellCorners ( mesh,&q->sons[i],span,np,nc ) ) return 0;
+      if ( !MMG3D_mark_MLSOctreeCellCorners ( mesh,&q->sons[i],span,np,nc ) ) return 0;
     }
   }
 
@@ -422,7 +422,7 @@ int  MMG3D_mark_MOctreeCellCorners ( MMG5_pMesh mesh, MMG5_MOctree_s* q,int span
 
 /**
  * \param mesh pointer toward the mesh structure
- * \param q pointer toward the MOctree cell
+ * \param q pointer toward the MLSOctree cell
  * \param span span between a corner and the other corner in one given direction
  * \param inm pointer toward the file in which we save the octree cells
  *
@@ -431,7 +431,7 @@ int  MMG3D_mark_MOctreeCellCorners ( MMG5_pMesh mesh, MMG5_MOctree_s* q,int span
  * Write the hexahedron associated to the octree leaves.
  *
  */
-int  MMG3D_write_MOctreeCell ( MMG5_pMesh mesh, MMG5_MOctree_s* q,int span,FILE *inm ) {
+int  MMG3D_write_MLSOctreeCell ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q,int span,FILE *inm ) {
   int i,ip0,ip1,ip2,ip3,ip4,ip5,ip6,ip7;
   static int nvert = 8;
   int ncells_x = mesh->freeint[0];
@@ -440,25 +440,24 @@ int  MMG3D_write_MOctreeCell ( MMG5_pMesh mesh, MMG5_MOctree_s* q,int span,FILE 
 
   if ( q->leaf==1) {
     if(q->coordoct[0] < ncells_x-1 && q->coordoct[1] < ncells_y-1 && q->coordoct[2] < ncells_z-1){
-      if ( !MMG3D_get_MOctreeCornerIndices ( mesh,q,span,&ip0,&ip1,&ip2,&ip3,
+      if ( !MMG3D_get_MLSOctreeCornerIndices ( mesh,q,span,&ip0,&ip1,&ip2,&ip3,
         &ip4,&ip5,&ip6,&ip7 ) ) {
           fprintf(stderr,"\n  ## Error: %s: unable to compute the indices of the"
           " corners of the octree cell.\n",__func__);
           return 0;
-        }
-
-        fprintf(inm,"%d %d %d %d %d %d %d %d %d\n",nvert,mesh->point[ip0].tmp,
-        mesh->point[ip1].tmp,mesh->point[ip2].tmp,mesh->point[ip3].tmp,
-        mesh->point[ip4].tmp,mesh->point[ip5].tmp,mesh->point[ip6].tmp,
-        mesh->point[ip7].tmp);
-
       }
+
+      fprintf(inm,"%d %d %d %d %d %d %d %d %d\n",nvert,mesh->point[ip0].tmp,
+              mesh->point[ip1].tmp,mesh->point[ip2].tmp,mesh->point[ip3].tmp,
+              mesh->point[ip4].tmp,mesh->point[ip5].tmp,mesh->point[ip6].tmp,
+              mesh->point[ip7].tmp);
     }
+  }
   else {
     span /= 2;
 
     for ( i=0; i<q->nsons; ++i ) {
-      if ( !MMG3D_write_MOctreeCell ( mesh,&q->sons[i],span,inm ) ) {
+      if ( !MMG3D_write_MLSOctreeCell ( mesh,&q->sons[i],span,inm ) ) {
         return 0;
       }
     }
@@ -470,7 +469,7 @@ int  MMG3D_write_MOctreeCell ( MMG5_pMesh mesh, MMG5_MOctree_s* q,int span,FILE 
 
 /**
  * \param mesh pointer toward the mesh structure
- * \param q pointer toward the MOctree cell
+ * \param q pointer toward the MLSOctree cell
  * \param dir direction to find the neighbour
  * \param Neighbour pointer toward the neighbour cell
  *
@@ -480,14 +479,14 @@ int  MMG3D_write_MOctreeCell ( MMG5_pMesh mesh, MMG5_MOctree_s* q,int span,FILE 
  *
  */
 
-int MMG3D_find_Neighbour_of_Bigger_or_Equal_Size(MMG5_pMesh mesh, MMG5_MOctree_s* q, int dir, MMG5_MOctree_s* Neighbour)
+int MMG3D_find_Neighbour_of_Bigger_or_Equal_Size(MMG5_pMesh mesh, MMG5_MLSOctree_s* q, int dir, MMG5_MLSOctree_s* Neighbour)
 {
   int i;
-  MMG5_MOctree_s* Temp_Neighbour;
-  MMG5_ADD_MEM(mesh,sizeof(MMG5_MOctree_s),"MOctree Temp_Neighbour",
+  MMG5_MLSOctree_s* Temp_Neighbour;
+  MMG5_ADD_MEM(mesh,sizeof(MMG5_MLSOctree_s),"MLSOctree Temp_Neighbour",
                return 0);
-  MMG5_SAFE_MALLOC(Temp_Neighbour,1, MMG5_MOctree_s, return 0);
-  MMG3D_init_MOctree_s(mesh, Temp_Neighbour, 0, 0, 0 );
+  MMG5_SAFE_MALLOC(Temp_Neighbour,1, MMG5_MLSOctree_s, return 0);
+  MMG3D_init_MLSOctree_s(mesh, Temp_Neighbour, 0, 0, 0 );
 
   /*UP*/
   if(dir == 0)
@@ -1602,7 +1601,7 @@ int  MMG3D_build_bounding_box ( MMG5_pMesh mesh, MMG5_pSol sol,
 
 /**
  * \param mesh pointer toward the mesh structure
- * \param q pointer toward the MOctree cell
+ * \param q pointer toward the MLSOctree cell
  * \param face_border the number of the treated face
  * \param depth_max the maximum depth of the octree
  * \param listip pointer toward a list of the boundary points indices
@@ -1614,7 +1613,7 @@ int  MMG3D_build_bounding_box ( MMG5_pMesh mesh, MMG5_pSol sol,
  * \return 1 if success, 0 if fail.
  *
  */
-int MMG3D_borders_delaunay( MMG5_pMesh mesh, MMG5_MOctree_s* q, int face_border, int depth_max, int *listip, int* i)
+int MMG3D_borders_delaunay( MMG5_pMesh mesh, MMG5_MLSOctree_s* q, int face_border, int depth_max, int *listip, int* i)
 {
   /*face_border=1 for the front face*/
   /*face_border=2 for the back face*/
@@ -1689,7 +1688,7 @@ int MMG3D_borders_delaunay( MMG5_pMesh mesh, MMG5_MOctree_s* q, int face_border,
       int span = pow(2,depth_max-(q->depth));
       if(q->coordoct[0] < ncells_x-1 && q->coordoct[1] < ncells_y-1 && q->coordoct[2] < ncells_z-1)
       {
-        if ( !MMG3D_get_MOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
+        if ( !MMG3D_get_MLSOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
           fprintf(stderr,"\n  ## Error: %s: unable to compute the indices of the"
           " corners of the octree cell.\n",__func__);
           return 0;
@@ -1785,7 +1784,7 @@ int MMG3D_borders_delaunay( MMG5_pMesh mesh, MMG5_MOctree_s* q, int face_border,
       int span = pow(2,depth_max-(q->depth));
       if(q->coordoct[0] < ncells_x-1 && q->coordoct[1] < ncells_y-1 && q->coordoct[2] < ncells_z-1)
       {
-        if ( !MMG3D_get_MOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
+        if ( !MMG3D_get_MLSOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
           fprintf(stderr,"\n  ## Error: %s: unable to compute the indices of the"
           " corners of the octree cell.\n",__func__);
           return 0;
@@ -1880,7 +1879,7 @@ int MMG3D_borders_delaunay( MMG5_pMesh mesh, MMG5_MOctree_s* q, int face_border,
       int span = pow(2,depth_max-(q->depth));
       if(q->coordoct[0] < ncells_x-1 && q->coordoct[1] < ncells_y-1 && q->coordoct[2] < ncells_z-1)
       {
-        if ( !MMG3D_get_MOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
+        if ( !MMG3D_get_MLSOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
           fprintf(stderr,"\n  ## Error: %s: unable to compute the indices of the"
           " corners of the octree cell.\n",__func__);
           return 0;
@@ -1973,7 +1972,7 @@ int MMG3D_borders_delaunay( MMG5_pMesh mesh, MMG5_MOctree_s* q, int face_border,
       int span = pow(2,depth_max-(q->depth));
       if(q->coordoct[0] < ncells_x-1 && q->coordoct[1] < ncells_y-1 && q->coordoct[2] < ncells_z-1)
       {
-        if ( !MMG3D_get_MOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
+        if ( !MMG3D_get_MLSOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
           fprintf(stderr,"\n  ## Error: %s: unable to compute the indices of the"
           " corners of the octree cell.\n",__func__);
           return 0;
@@ -2066,7 +2065,7 @@ int MMG3D_borders_delaunay( MMG5_pMesh mesh, MMG5_MOctree_s* q, int face_border,
       int span = pow(2,depth_max-(q->depth));
       if(q->coordoct[0] < ncells_x-1 && q->coordoct[1] < ncells_y-1 && q->coordoct[2] < ncells_z-1)
       {
-        if ( !MMG3D_get_MOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
+        if ( !MMG3D_get_MLSOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
           fprintf(stderr,"\n  ## Error: %s: unable to compute the indices of the"
           " corners of the octree cell.\n",__func__);
           return 0;
@@ -2160,7 +2159,7 @@ int MMG3D_borders_delaunay( MMG5_pMesh mesh, MMG5_MOctree_s* q, int face_border,
       int span = pow(2,depth_max-(q->depth));
       if(q->coordoct[0] < ncells_x-1 && q->coordoct[1] < ncells_y-1 && q->coordoct[2] < ncells_z-1)
       {
-        if ( !MMG3D_get_MOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
+        if ( !MMG3D_get_MLSOctreeCornerIndices ( mesh,q,span,ip,ip+1,ip+2,ip+3,ip+4,ip+5,ip+6,ip+7 ) ) {
           fprintf(stderr,"\n  ## Error: %s: unable to compute the indices of the"
           " corners of the octree cell.\n",__func__);
           return 0;
@@ -2208,7 +2207,7 @@ int MMG3D_borders_delaunay( MMG5_pMesh mesh, MMG5_MOctree_s* q, int face_border,
  */
 int MMG3D_build_borders(MMG5_pMesh mesh, int* listip, int depth_max)
 {
-  MMG5_MOctree_s *po;
+  MMG5_MLSOctree_s *po;
   int p, *i, j;
 
   po=mesh->octree->root;
@@ -2232,7 +2231,7 @@ int MMG3D_build_borders(MMG5_pMesh mesh, int* listip, int depth_max)
  * Mark elements in cavity, update the list of tetra in the cavity and return size of the list of tetra in the cavity.
  *
  */
-int MMG3D_cavity_MOctree(MMG5_pMesh mesh ,int iel,int ip,int *list)
+int MMG3D_cavity_MLSOctree(MMG5_pMesh mesh ,int iel,int ip,int *list)
 {
   MMG5_pPoint      ppt;
   MMG5_pTetra      tet,tet1,tetadj;
@@ -2340,13 +2339,13 @@ int  MMG3D_add_Boundary ( MMG5_pMesh mesh, MMG5_pSol sol, int depth_max) {
       return 0;
     }
 
-    ilist=MMG3D_cavity_MOctree(mesh, j, *(listip+i), list_cavity);
+    ilist=MMG3D_cavity_MLSOctree(mesh, j, *(listip+i), list_cavity);
     if ( ilist <= 0 ) {
       printf("  ## Error: %s: unable to compute the cavity of point %d.\n",__func__,*(listip+i));
       return 0;
     }
 
-    ier = MMG5_delone_MOctree(mesh, sol, *(listip+i), list_cavity, ilist);
+    ier = MMG5_delone_MLSOctree(mesh, sol, *(listip+i), list_cavity, ilist);
     if ( ier <= 0 ) {
       printf("  ## Error: %s: unable to insert point %d.\n",__func__,*(listip+i));
       return 0;
@@ -2369,7 +2368,7 @@ int  MMG3D_add_Boundary ( MMG5_pMesh mesh, MMG5_pSol sol, int depth_max) {
  * \param sol pointer toward the solution structure.
  * \param ip index of the point to insert.
  * \param list pointer toward the list of the tetra in the cavity (computed by
- * \ref MMG5MMG3D_cavity_MOctree).
+ * \ref MMG5MMG3D_cavity_MLSOctree).
  * \param ilist number of tetra inside the cavity.
  *
  * \return 1 if sucess, 0 or -1 if fail.
@@ -2378,7 +2377,7 @@ int  MMG3D_add_Boundary ( MMG5_pMesh mesh, MMG5_pSol sol, int depth_max) {
  *
  */
 
-int MMG5_delone_MOctree(MMG5_pMesh mesh,MMG5_pSol sol,int ip,int *list,int ilist) {
+int MMG5_delone_MLSOctree(MMG5_pMesh mesh,MMG5_pSol sol,int ip,int *list,int ilist) {
   MMG5_pPoint   ppt;
   MMG5_pTetra   pt,pt1;
   MMG5_xTetra   xt;

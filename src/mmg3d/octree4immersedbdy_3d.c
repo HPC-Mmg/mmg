@@ -40,9 +40,9 @@
 
 #define MMG3D_IMMERSRAT 2 // ratio between the octree and the immersed surface
 
-#define MMG3D_MOCTREEDEPTHMAX 32 // maximal possible value to be able to store  nspan_at_root in an int32
+#define MMG3D_MOCTREEDEPTHMAX 15 // maximal possible value to be able to store  nspan_at_root in an int16
 
-#define MMG3D_MOCTREENSPAN 4294967296 // 2^32 int32 max
+#define MMG3D_MOCTREENSPAN 32768 // 2^15
 
 /**
  * \param mesh pointer toward a mesh structure.
@@ -61,7 +61,7 @@
  */
 static inline
 int MMG3D_create_bbOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
-  MMG5_MOctree_s *po;
+  MMG5_MLSOctree_s *po;
   double         length[3],c[3];
   int            ip;
 
@@ -87,8 +87,12 @@ int MMG3D_create_bbOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
   }
 
   /* Allocation of the octree root */
-  if ( !MMG3D_init_MOctree(mesh,&mesh->octree,ip,length,MMG3D_MOCTREEDEPTHMAX) )
+  if ( !MMG3D_init_MLSOctree(mesh,&mesh->octree,ip,length,MMG3D_MOCTREEDEPTHMAX) )
     return 0;
+
+  /* Feel mesh->freeint by the maximal number of cells in each direction (used
+   * to save the octree) */
+  mesh->freeint[0] = mesh->freeint[1] = mesh->freeint[2] =  MMG3D_MOCTREENSPAN;
 
   /* For now, the root is a leaf */
   po = mesh->octree->root;
@@ -194,12 +198,12 @@ int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol) {
     fprintf(stderr,"\n  ## Octree root creation problem. Exit program.\n");
     return 0;
   }
-#ifndef NDEBUG
-  // To remove when the octree creation will be ok
-  if ( !MMG3D_saveVTKOctree(mesh,sol,"bbOctree.vtk") ) {
-    fprintf(stderr,"\n  ## Warning: unable to save the initial octree\n");
-  }
-#endif
+/* #ifndef NDEBUG */
+/*   // To remove when the octree creation will be ok */
+/*   if ( !MMG3D_saveVTKOctree(mesh,sol,"bbOctree.vtk") ) { */
+/*     fprintf(stderr,"\n  ## Warning: unable to save the initial octree\n"); */
+/*   } */
+/* #endif */
 
   /**--- stage 3: Octree refinement */
   if ( abs(mesh->info.imprim) > 3 )
@@ -208,13 +212,6 @@ int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol) {
   /* Octree refinement in order to have 1 node per leaf */
   if ( !MMG3D_refine_octreeOnPoints(mesh,sol) ) {
     fprintf(stderr,"\n  ## Octree refinement (over points) problem."
-            " Exit program.\n");
-    return 0;
-  }
-
-  /* Octree refinement in order to have 1 boundary entity (triangle) per leaf */
-  if ( !MMG3D_refine_octreeOnTria(mesh,sol) ) {
-    fprintf(stderr,"\n  ## Octree refinement (over triangles) problem."
             " Exit program.\n");
     return 0;
   }

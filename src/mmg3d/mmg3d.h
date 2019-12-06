@@ -189,27 +189,27 @@ static const unsigned char MMG5_permedge[12][6] = {
 
 #define MMG3D_SIZE_OCTREESONS 8
 
-/* MOctree prototypes */
-int  MMG3D_init_MOctree    ( MMG5_pMesh,MMG5_pMOctree*,int, double length[3],int );
-int  MMG3D_init_MOctree_s  ( MMG5_pMesh mesh, MMG5_MOctree_s* q, int ip, int depth, int8_t split_ls );
-int  MMG3D_split_MOctree_s ( MMG5_pMesh mesh, MMG5_MOctree_s* q, MMG5_pSol sol);
-int  MMG3D_set_splitls_MOctree ( MMG5_pMesh mesh, MMG5_MOctree_s* q, MMG5_pSol sol);
+/* MLSOctree prototypes */
+int  MMG3D_init_MLSOctree    ( MMG5_pMesh,MMG5_pMLSOctree*,int, double length[3],int );
+int  MMG3D_init_MLSOctree_s  ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q, int ip, int depth, int8_t split_ls );
+int  MMG3D_split_MLSOctree_s ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q, MMG5_pSol sol);
+int  MMG3D_set_splitls_MLSOctree ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q, MMG5_pSol sol);
 
-int  MMG3D_free_MOctree    ( MMG5_pMOctree* q, MMG5_pMesh mesh);
-int  MMG3D_free_MOctree_s  ( MMG5_MOctree_s* q, MMG5_pMesh mesh);
-int  MMG3D_merge_MOctree_s ( MMG5_MOctree_s* q, MMG5_pMesh mesh);
+int  MMG3D_free_MLSOctree    ( MMG5_pMLSOctree* q, MMG5_pMesh mesh);
+int  MMG3D_free_MLSOctree_s  ( MMG5_MLSOctree_s* q, MMG5_pMesh mesh);
+int  MMG3D_merge_MLSOctree_s ( MMG5_MLSOctree_s* q, MMG5_pMesh mesh);
 int  MMG3D_convert_grid2tetmesh(MMG5_pMesh mesh, MMG5_pSol sol);
-int  MMG3D_mark_MOctreeCellCorners ( MMG5_pMesh mesh, MMG5_MOctree_s* q,int span,int *np,int *nc );
-int  MMG3D_write_MOctreeCell ( MMG5_pMesh mesh, MMG5_MOctree_s* q,int span, FILE *inm );
-int MMG3D_find_Neighbour_of_Bigger_or_Equal_Size(MMG5_pMesh mesh, MMG5_MOctree_s* q, int dir, MMG5_MOctree_s* Neighbour);
+int  MMG3D_mark_MLSOctreeCellCorners ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q,int span,int *np,int *nc );
+int  MMG3D_write_MLSOctreeCell ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q,int span, FILE *inm );
+int MMG3D_find_Neighbour_of_Bigger_or_Equal_Size(MMG5_pMesh mesh, MMG5_MLSOctree_s* q, int dir, MMG5_MLSOctree_s* Neighbour);
 void  MMG3D_del_UnusedPoints ( MMG5_pMesh mesh);
 int MMG3D_build_bounding_box ( MMG5_pMesh mesh,MMG5_pSol,int*,int*);
 int MMG3D_intetra(MMG5_pMesh mesh,int iel,int ip);
-int MMG3D_cavity_MOctree(MMG5_pMesh mesh ,int iel,int ip,int *list);
+int MMG3D_cavity_MLSOctree(MMG5_pMesh mesh ,int iel,int ip,int *list);
 int  MMG3D_add_Boundary ( MMG5_pMesh mesh, MMG5_pSol sol, int depth_max);
 int MMG3D_build_borders(MMG5_pMesh mesh, int* listip, int depth_max);
-int MMG3D_borders_delaunay( MMG5_pMesh mesh, MMG5_MOctree_s* q, int face_border, int depth_max, int *listip, int* i);
-int MMG5_delone_MOctree(MMG5_pMesh mesh,MMG5_pSol sol,int ip,int *list,int ilist);
+int MMG3D_borders_delaunay( MMG5_pMesh mesh, MMG5_MLSOctree_s* q, int face_border, int depth_max, int *listip, int* i);
+int MMG5_delone_MLSOctree(MMG5_pMesh mesh,MMG5_pSol sol,int ip,int *list,int ilist);
 int MMG3D_locatePoint( MMG5_pMesh  mesh, MMG5_pPoint ppt );
 int MMG3D_delete_octree ( MMG5_pMesh mesh );
 

@@ -56,7 +56,7 @@
 
 static inline
 int MMG3D_convert_grid2smallOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
-  MMG5_MOctree_s *po;
+  MMG5_MLSOctree_s *po;
   double         length[3];
   int            i,ip,depth_max,max_dim;
 
@@ -90,7 +90,7 @@ int MMG3D_convert_grid2smallOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
 
   /* Computation of the octree length */
   /* Octree cell initialization */
-  if ( !MMG3D_init_MOctree(mesh,&mesh->octree,ip,length,depth_max) ) return 0;
+  if ( !MMG3D_init_MLSOctree(mesh,&mesh->octree,ip,length,depth_max) ) return 0;
   po = mesh->octree->root;
 
   if(po->depth != depth_max)
@@ -103,14 +103,14 @@ int MMG3D_convert_grid2smallOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
   }
 
   /** Step 2: Octree subdivision until reaching the grid size */
-  MMG3D_split_MOctree_s (mesh, po, sol);
+  MMG3D_split_MLSOctree_s (mesh, po, sol);
 
   return 1;
 }
 
 /**
  *\param mesh toward the mesh structure
- *\param q pointer toward the MOctree cell
+ *\param q pointer toward the MLSOctree cell
  *\param depth_max the depth maximum of the octree.
  *
  * \return 1 if success, 0 if fail.
@@ -119,7 +119,7 @@ int MMG3D_convert_grid2smallOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
  *
  */
 static inline
-int MMG3D_build_coarsen_octree_first_time(MMG5_pMesh mesh, MMG5_MOctree_s* q, int depth_max) {
+int MMG3D_build_coarsen_octree_first_time(MMG5_pMesh mesh, MMG5_MLSOctree_s* q, int depth_max) {
   int i;
   if (q->depth < depth_max-1)
   {
@@ -138,14 +138,14 @@ int MMG3D_build_coarsen_octree_first_time(MMG5_pMesh mesh, MMG5_MOctree_s* q, in
     }
     if (sum_ls==0)
     {
-      MMG3D_merge_MOctree_s (q, mesh);
+      MMG3D_merge_MLSOctree_s (q, mesh);
     }
   }
   return 1;
 }
 
 /**
- *\param q pointer toward the MOctree cell
+ *\param q pointer toward the MLSOctree cell
  *\param depth_max the depth maximum of the octree.
  *\param depth  the depth of the parent that we want to see if we can merge his sons.
  * \return 1 if success, 0 if fail.
@@ -154,7 +154,7 @@ int MMG3D_build_coarsen_octree_first_time(MMG5_pMesh mesh, MMG5_MOctree_s* q, in
  *
  */
 static inline
-int MMG3D_build_coarsen_octree(MMG5_pMesh mesh, MMG5_MOctree_s* q, int depth_max, int depth) {
+int MMG3D_build_coarsen_octree(MMG5_pMesh mesh, MMG5_MLSOctree_s* q, int depth_max, int depth) {
   int i;
   if (q->depth < depth)
   {
@@ -165,11 +165,11 @@ int MMG3D_build_coarsen_octree(MMG5_pMesh mesh, MMG5_MOctree_s* q, int depth_max
   }
   else
   {
-    MMG5_MOctree_s* Neighbour;
-    MMG5_ADD_MEM(mesh,sizeof(MMG5_MOctree_s),"MOctree neighbour",
+    MMG5_MLSOctree_s* Neighbour;
+    MMG5_ADD_MEM(mesh,sizeof(MMG5_MLSOctree_s),"MLSOctree neighbour",
                  return 0);
-    MMG5_SAFE_MALLOC(Neighbour,1, MMG5_MOctree_s, return 0);
-    MMG3D_init_MOctree_s(mesh, Neighbour, 0, 0, 0 );
+    MMG5_SAFE_MALLOC(Neighbour,1, MMG5_MLSOctree_s, return 0);
+    MMG3D_init_MLSOctree_s(mesh, Neighbour, 0, 0, 0 );
 
     int sum_leaf;
     sum_leaf=0;
@@ -193,7 +193,7 @@ int MMG3D_build_coarsen_octree(MMG5_pMesh mesh, MMG5_MOctree_s* q, int depth_max
           }
         }
       }
-      MMG3D_merge_MOctree_s (q, mesh);
+      MMG3D_merge_MLSOctree_s (q, mesh);
       MMG5_DEL_MEM (mesh,Neighbour);
       return 1;
     }
@@ -217,7 +217,7 @@ int MMG3D_build_coarsen_octree(MMG5_pMesh mesh, MMG5_MOctree_s* q, int depth_max
  */
 static inline
 int MMG3D_coarsen_octree(MMG5_pMesh mesh, MMG5_pSol sol) {
-  MMG5_MOctree_s *po;
+  MMG5_MLSOctree_s *po;
   po=mesh->octree->root;
 
   int i, depth_max;
@@ -323,7 +323,7 @@ int MMG3D_delete_bounding_box ( MMG5_pMesh mesh ) {
 
 /**
  * \param mesh pointer toward a mesh structure.
- * \param q pointer toward to the MOctree cell
+ * \param q pointer toward to the MLSOctree cell
  * \param depth_max maximum depth of the octree
  * \param depth depth of the octree to reach
  *
@@ -334,7 +334,7 @@ int MMG3D_delete_bounding_box ( MMG5_pMesh mesh ) {
  *
  */
 static inline
-int MMG3D_delete_MOctree(MMG5_pMesh mesh, MMG5_MOctree_s* q) {
+int MMG3D_delete_MLSOctree(MMG5_pMesh mesh, MMG5_MLSOctree_s* q) {
   int i;
 
 #ifndef NDEBUG
@@ -350,12 +350,12 @@ int MMG3D_delete_MOctree(MMG5_pMesh mesh, MMG5_MOctree_s* q) {
   /* Free the subcell */
   for ( i=0; i<q->nsons; i++ ) {
     if ( q->sons[i].nsons )  {
-      MMG3D_delete_MOctree(mesh, &q->sons[i]);
+      MMG3D_delete_MLSOctree(mesh, &q->sons[i]);
     }
   }
 
   /* Free our sons */
-  MMG3D_free_MOctree_s ( q, mesh );
+  MMG3D_free_MLSOctree_s ( q, mesh );
 
   return 1;
 }
@@ -370,9 +370,9 @@ int MMG3D_delete_MOctree(MMG5_pMesh mesh, MMG5_MOctree_s* q) {
  */
 int MMG3D_delete_octree ( MMG5_pMesh mesh ) {
 
-  MMG3D_delete_MOctree(mesh,mesh->octree->root);
+  MMG3D_delete_MLSOctree(mesh,mesh->octree->root);
 
-  MMG3D_free_MOctree( &mesh->octree,mesh);
+  MMG3D_free_MLSOctree( &mesh->octree,mesh);
 
   return 1;
 
@@ -468,7 +468,7 @@ int MMG3D_convert_octree2tetmesh(MMG5_pMesh mesh, MMG5_pSol sol) {
  */
 static inline
 int MMG3D_convert_octree2tetmesh_with_tetgen(MMG5_pMesh mesh, MMG5_pSol sol) {
-  MMG5_MOctree_s   *q;
+  MMG5_MLSOctree_s   *q;
   MMG5_pPoint      ppt;
   int              i,ier,span,np,nc;
   FILE             *inm;
@@ -485,7 +485,7 @@ int MMG3D_convert_octree2tetmesh_with_tetgen(MMG5_pMesh mesh, MMG5_pSol sol) {
 
   span = mesh->octree->nspan_at_root;
   np = nc = 0;
-  ier = MMG3D_mark_MOctreeCellCorners(mesh,q,span,&np,&nc);
+  ier = MMG3D_mark_MLSOctreeCellCorners(mesh,q,span,&np,&nc);
   if ( !ier ) {
     fprintf(stderr,"\n  ## Error: %s: unable to mark the octree cell corners as"
             " used.\n",__func__);
@@ -577,7 +577,7 @@ int MMG3D_convert_octree2tetmesh_with_tetgen(MMG5_pMesh mesh, MMG5_pSol sol) {
   return 1;
 }
 
-static inline int MMG3D_check_octreeSons ( MMG5_MOctree_s *q ) {
+static inline int MMG3D_check_octreeSons ( MMG5_MLSOctree_s *q ) {
   int i;
 
   /* Security check */

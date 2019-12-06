@@ -1447,7 +1447,7 @@ int MMG3D_loadVTKGrid(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename) {
  */
 int MMG3D_saveVTKOctree(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename) {
   FILE             *inm;
-  MMG5_MOctree_s   *q;
+  MMG5_MLSOctree_s   *q;
   MMG5_pPoint       ppt;
   int               k,np,nc,ier,span;
   char             *data,*ptr;
@@ -1503,7 +1503,7 @@ int MMG3D_saveVTKOctree(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename) {
 
   span = mesh->octree->nspan_at_root;
   np = nc = 0;
-  ier = MMG3D_mark_MOctreeCellCorners(mesh,q,span,&np,&nc);
+  ier = MMG3D_mark_MLSOctreeCellCorners(mesh,q,span,&np,&nc);
   if ( !ier ) {
     fprintf(stderr,"\n  ## Error: %s: unable to mark the octree cell corners as"
             " used.\n",__func__);
@@ -1534,7 +1534,7 @@ int MMG3D_saveVTKOctree(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename) {
   fprintf(inm,"\n%s %d %d\n","CELLS",nc,(nvert_cell+1)*nc);
   q = mesh->octree->root;
   span = mesh->octree->nspan_at_root;
-  if ( !MMG3D_write_MOctreeCell(mesh,q,span,inm) ) {
+  if ( !MMG3D_write_MLSOctreeCell(mesh,q,span,inm) ) {
     fprintf(stderr,"\n  ## Error: %s: unable to save the octree cells.\n",
             __func__);
     return 0;
