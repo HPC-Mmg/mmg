@@ -77,11 +77,15 @@ int MMG3D_init_MLSOctree  ( MMG5_pMesh mesh, MMG5_pMLSOctree *q, int ip,
   /** Check that we have enough memory to allocate a new cell */
   MMG5_ADD_MEM(mesh,sizeof(MMG5_MLSOctree_s),"initial MLSOctree cell",
                return 0);
+  MMG5_ADD_MEM(mesh,sizeof(MMG5_MOctree_s),"initial MOctree cell",
+               return 0);
 
   /** New cell allocation */
   MMG5_SAFE_MALLOC( (*q)->root,1, MMG5_MLSOctree_s, return 0);
+  MMG5_SAFE_MALLOC( (*q)->m_root,1, MMG5_MOctree_s, return 0);
   MMG3D_init_MLSOctree_s( mesh,(*q)->root,ip,0,0);
   (*q)->root->nsons = 0;
+  MMG3D_init_MOctree_s( mesh,(*q)->m_root,0);
 
   return 1;
 }
@@ -114,6 +118,32 @@ int MMG3D_init_MLSOctree_s( MMG5_pMesh mesh, MMG5_MLSOctree_s* q,int ip, int dep
   q->coordoct[2]=0;
   return 1;
 }
+
+
+/**
+ * \param mesh pointer toward the mesh structure
+ * \param q pointer toward the MOctree cell
+ * \param depth cell's depth
+ *
+ * \return 1 if success, 0 if fail.
+ *
+ * Allocate and init an MOctree Cell
+ *
+ */
+int MMG3D_init_MOctree_s( MMG5_pMesh mesh, MMG5_MOctree_s* q, int depth) {
+
+  q->father = NULL;
+  q->sons   = NULL;
+
+  q->depth  = depth;
+
+  q->leaf = 0;
+  q->coordoct[0]=0;
+  q->coordoct[1]=0;
+  q->coordoct[2]=0;
+  return 1;
+}
+
 
 /**
  * \param mesh pointer toward the mesh structure
@@ -158,6 +188,91 @@ int  MMG3D_set_splitls_MLSOctree ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q, MMG5_pS
 
   return 1;
 }
+
+/**
+ * \param mesh pointer toward the mesh structure
+ * \param q pointer toward the MOctree cell
+ *
+ * \return 1 if success, 0 if fail.
+ *
+ * Split an MOctree cell \ref q into \ref MMG3D_SIZE_OCTREESONS MOctree Cells one time.
+ * \ref q must be a leaf.
+ *
+ */
+ int  MMG3D_one_split_MOctree_s ( MMG5_pMesh mesh,MMG5_MOctree_s* q) {
+   int i;
+   int depth_max = mesh->octree->depth_max;
+   int ncells_x = mesh->freeint[0];
+   int ncells_y = mesh->freeint[1];
+   int ncells_z = mesh->freeint[2];
+
+   if(q->depth < depth_max)
+   {
+     q->nsons = 8;
+     MMG5_ADD_MEM(mesh,q->nsons*sizeof(MMG5_MOctree_s),"MOctree sons",
+                  return 0);
+     MMG5_SAFE_MALLOC(q->sons,q->nsons, MMG5_MOctree_s, return 0);
+     for(i=0; i<q->nsons; i++)
+     {
+       MMG3D_init_MOctree_s(mesh, &q->sons[i], q->depth + 1);
+
+       /*calculus of octree coordinates and ip*/
+       int power = pow(2,depth_max-(q->depth+1));
+
+       q->sons[i].coordoct[0]=q->coordoct[0];
+       q->sons[i].coordoct[1]=q->coordoct[1];
+       q->sons[i].coordoct[2]=q->coordoct[2];
+
+       if(i==1)
+       {
+         q->sons[i].coordoct[0]+=power;
+         printf("power  = %d\n",q->sons[i].coordoct[0]);
+       }
+       else if(i==2)
+       {
+         q->sons[i].coordoct[1]+=power;
+       }
+       else if(i==3)
+       {
+         q->sons[i].coordoct[0]+=power;
+         q->sons[i].coordoct[1]+=power;
+       }
+       else if(i==4)
+       {
+         q->sons[i].coordoct[2]+=power;
+       }
+       else if(i==5)
+       {
+         q->sons[i].coordoct[0]+=power;
+         q->sons[i].coordoct[2]+=power;
+       }
+       else if(i==6)
+       {
+         q->sons[i].coordoct[1]+=power;
+         q->sons[i].coordoct[2]+=power;
+       }
+       else if(i==7)
+       {
+         q->sons[i].coordoct[0]+=power;
+         q->sons[i].coordoct[1]+=power;
+         q->sons[i].coordoct[2]+=power;
+       }
+
+       q->sons[i].father = q;
+       // if(q->sons[i].coordoct[0] < ncells_x-1 && q->sons[i].coordoct[1] < ncells_y-1 && q->sons[i].coordoct[2] < ncells_z-1)
+       // {
+       //   q->sons[i].ghost = 0;
+       //   q->blf_ip=q->coordoct[2]*ncells_x*ncells_y+q->coordoct[1]*ncells_x+q->coordoct[0]+1;
+       // }
+       // else
+       // {
+       //   q->sons[i].ghost = 1;
+       // }
+     }
+   }
+   return 1;
+ }
+
 
 /**
  * \param mesh pointer toward the mesh structure

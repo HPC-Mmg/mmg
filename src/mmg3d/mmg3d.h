@@ -189,9 +189,12 @@ static const unsigned char MMG5_permedge[12][6] = {
 
 #define MMG3D_SIZE_OCTREESONS 8
 
+
 /* MLSOctree prototypes */
 int  MMG3D_init_MLSOctree    ( MMG5_pMesh,MMG5_pMLSOctree*,int, double length[3],int );
 int  MMG3D_init_MLSOctree_s  ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q, int ip, int depth, int8_t split_ls );
+int  MMG3D_init_MOctree_s  ( MMG5_pMesh mesh, MMG5_MOctree_s* q, int depth );
+int  MMG3D_one_split_MOctree_s ( MMG5_pMesh mesh, MMG5_MOctree_s* q);
 int  MMG3D_split_MLSOctree_s ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q, MMG5_pSol sol);
 int  MMG3D_set_splitls_MLSOctree ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q, MMG5_pSol sol);
 
