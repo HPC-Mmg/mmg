@@ -504,6 +504,33 @@ typedef struct {
 
 /**
  *
+ * MIBOctree cell: cellule for octree subdivision on immersed boundary
+ *
+ */
+typedef struct MMG5_MIBOctree_s
+{
+  int    sons[8]; /*!< array of index of the subtrees of the current cell */
+  int    depth; /*!< depth of the cell in the octree or tracks of the linked
+                 * list if the cell is not used */
+  int8_t is_filled; /*!< is the cell filled */
+} MMG5_MIBOctree_s;
+
+/**
+ * MIBOctree global structure (enriched by global variables) for grid
+ * subdivision on an immersed boundary
+ */
+typedef struct
+{
+  MMG5_MIBOctree_s* root; /*!<  Pointer toward the first MIBOctree cell */
+  size_t            ncells_max; /*!< Maximal number of cells */
+  int               depth_max; /*!< Maximal depth of the octree */
+  int               nxt; /*!< pointer toward the next available octree cell */
+} MMG5_MIBOctree;
+typedef MMG5_MIBOctree  * MMG5_pMIBOctree;
+
+
+/**
+ *
  * MLSOctree cell: cellule for mesh generation from an octree
  *
  */

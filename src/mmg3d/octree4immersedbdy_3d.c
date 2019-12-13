@@ -198,12 +198,12 @@ int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol) {
     fprintf(stderr,"\n  ## Octree root creation problem. Exit program.\n");
     return 0;
   }
-/* #ifndef NDEBUG */
-/*   // To remove when the octree creation will be ok */
-/*   if ( !MMG3D_saveVTKOctree(mesh,sol,"bbOctree.vtk") ) { */
-/*     fprintf(stderr,"\n  ## Warning: unable to save the initial octree\n"); */
-/*   } */
-/* #endif */
+#ifndef NDEBUG
+  // To remove when the octree creation will be ok
+  if ( !MMG3D_saveVTKOctree(mesh,sol,"bbOctree.vtk") ) {
+    fprintf(stderr,"\n  ## Warning: unable to save the initial octree\n");
+  }
+#endif
 
   /**--- stage 3: Octree refinement */
   if ( abs(mesh->info.imprim) > 3 )

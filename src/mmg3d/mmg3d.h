@@ -213,6 +213,14 @@ int MMG5_delone_MLSOctree(MMG5_pMesh mesh,MMG5_pSol sol,int ip,int *list,int ili
 int MMG3D_locatePoint( MMG5_pMesh  mesh, MMG5_pPoint ppt );
 int MMG3D_delete_octree ( MMG5_pMesh mesh );
 
+/* MIBOctree prototypes */
+int MMG3D_init_MIBOctree  ( MMG5_pMesh mesh, MMG5_pMIBOctree *q );
+int MMG3D_newMIBOctree_s( MMG5_pMesh mesh,MMG5_pMIBOctree *root,int depth );
+int MMG3D_split_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctree *root);
+int MMG3D_free_MIBOctree  ( MMG5_pMesh mesh,MMG5_pMIBOctree* q );
+int MMG3D_delMIBOctree_s( MMG5_pMesh mesh,int id_cell,MMG5_pMIBOctree *root );
+int  MMG3D_merge_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctree *root);
+
 int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol);
 
 
