@@ -623,6 +623,7 @@ typedef struct {
   MMG5_pEdge     edge; /*!< Pointer toward the \ref MMG5_Edge structure */
   MMG5_HGeom     htab; /*!< \ref MMG5_HGeom structure */
   MMG5_pMLSOctree  octree; /*!< Pointer toward a MMG5_MLSOctree structure */
+  MMG5_pMIBOctree  iboctree; /*!< Pointer toward a MMG5_MIBOctree structure */
   MMG5_Info      info; /*!< \ref MMG5_Info structure */
   char     *namein; /*!< Input mesh name */
   char     *nameout; /*!< Output mesh name */

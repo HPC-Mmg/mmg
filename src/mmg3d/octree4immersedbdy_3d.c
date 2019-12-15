@@ -40,10 +40,6 @@
 
 #define MMG3D_IMMERSRAT 0.5 // ratio between the immersed surface and the octree
 
-#define MMG3D_MOCTREEDEPTHMAX 15 // maximal possible value to be able to store  nspan_at_root in an int16
-
-#define MMG3D_MOCTREENSPAN 32768 // 2^15
-
 /**
  * \param mesh pointer toward a mesh structure.
  * \param sol pointer toward a solution structure.
@@ -51,9 +47,8 @@
  * \return 1 if success, 0 if fail.
  *
  * Create the initial octree cell that will embed the provided surface (stored
- * in mesh->tria, mesh->points...). We suppose here that the octree root will have a
- * size of MMG3D_IMMERSRAT \f$ \times \f$ the surface mesh bounding box and that
- * the immersed surface is centered inside the octree root.
+ * in mesh->tria, mesh->points...). We suppose here that the octree root will
+ * represent the [0;1]^3 cell.
  *
  * \remark the surface mesh must be scaled, thus, the bounding box info is
  * already computed.
@@ -61,43 +56,13 @@
  */
 static inline
 int MMG3D_create_bbOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
-  MMG5_MLSOctree_s *po;
-  double         length[3],c[3];
-  int            ip;
 
   /* if mesh->info.delta==0 it means that the BB has not been computed */
   assert ( mesh->info.delta > 0.  );
 
-  /** Set initial dimensions */
-
-  /* Octree size: squared for now but maybe we will need something smarter */
-  length[0] = length[1] = length[2] = MMG3D_IMMERSRAT;
-
-  /* Creation of the lower left bottom point of the octree root
-   * (c = - (length - 1)/2 ) */
-  c[0] = c[1] = c[2] = -0.5;
-  ip = MMG3D_newPt( mesh, c, 0);
-  if ( !ip ) {
-    MMG3D_POINT_REALLOC(mesh,sol,ip,mesh->gap,
-                        fprintf(stderr,"\n  ## Warning: %s: unable to"
-                                " allocate a new point\n",__func__);
-                        MMG5_INCREASE_MEM_MESSAGE();
-                        return 0;
-                        ,c,0);
-  }
-
-  /* Allocation of the octree root */
-  if ( !MMG3D_init_MLSOctree(mesh,&mesh->octree,ip,length,MMG3D_MOCTREEDEPTHMAX) )
+  /* Initialization of the first octree cell. */
+  if ( !MMG3D_init_MIBOctree(mesh,&mesh->iboctree) )
     return 0;
-
-  /* Feel mesh->freeint by the maximal number of cells in each direction (used
-   * to save the octree) */
-  mesh->freeint[0] = mesh->freeint[1] = mesh->freeint[2] =  MMG3D_MOCTREENSPAN;
-
-  /* For now, the root is a leaf */
-  po = mesh->octree->root;
-  po->nsons = 0;
-  po->leaf=1;
 
   return 1;
 }
@@ -198,9 +163,10 @@ int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol) {
     fprintf(stderr,"\n  ## Octree root creation problem. Exit program.\n");
     return 0;
   }
+
 #ifndef NDEBUG
   // To remove when the octree creation will be ok
-  if ( !MMG3D_saveVTKOctree(mesh,sol,"bbOctree.vtk") ) {
+  if ( !MMG3D_saveVTKMIBOctree(mesh,sol,"bbOctree.vtk") ) {
     fprintf(stderr,"\n  ## Warning: unable to save the initial octree\n");
   }
 #endif
@@ -238,7 +204,7 @@ int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol) {
 
 #ifndef NDEBUG
   // To remove when the octree creation will be ok
-  if ( !MMG3D_saveVTKOctree(mesh,sol,"finalOctree.vtk") ) {
+  if ( !MMG3D_saveVTKMIBOctree(mesh,sol,"finalOctree.vtk") ) {
     fprintf(stderr,"\n  ## Warning: unable to save the initial octree\n");
   }
 #endif

@@ -38,7 +38,6 @@
 
 #include "mmg3d.h"
 
-#define MMG3D_NBSONS 8
 #define MMG3D_NOSONS 0
 
 /**
@@ -53,7 +52,7 @@
  */
 int MMG3D_init_MIBOctree  ( MMG5_pMesh mesh, MMG5_pMIBOctree *q ) {
   size_t available;
-  int    nbBitsInt,i,depth;
+  int    nbBitsInt,i;
 
   /** Root allocation */
   MMG5_ADD_MEM(mesh,sizeof(MMG5_MIBOctree),"MIBOctree root",
@@ -69,16 +68,16 @@ int MMG3D_init_MIBOctree  ( MMG5_pMesh mesh, MMG5_pMIBOctree *q ) {
   // ncells_max may be underestimated: to be fitted
   available /=  sizeof(MMG5_MIBOctree_s);
   (*q)->ncells_max = 0;
-  if ( mesh->np < available ) {
-    (*q)->ncells_max = mesh->np;
-    if ( (*q)->ncells_max + mesh->nt < available ) {
-      (*q)->ncells_max += mesh->nt;
+  if ( MMG3D_SIZE_OCTREESONS*mesh->np < available ) {
+    (*q)->ncells_max = MMG3D_SIZE_OCTREESONS*mesh->np;
+    if ( (*q)->ncells_max +  MMG3D_SIZE_OCTREESONS*mesh->nt < available ) {
+      (*q)->ncells_max +=  MMG3D_SIZE_OCTREESONS*mesh->nt;
     }
   }
   if ( !(*q)->ncells_max ) {
     (*q)->ncells_max = available;
   }
-  if ( (*q)->ncells_max < 4 ) {
+  if ( (*q)->ncells_max < MMG3D_SIZE_OCTREESONS ) {
     printf("  ## Error:%s:%d: Not enough memory to allocate octree array.\n",
            __func__,__LINE__);
     return 0;
@@ -91,18 +90,15 @@ int MMG3D_init_MIBOctree  ( MMG5_pMesh mesh, MMG5_pMIBOctree *q ) {
   /** Array allocation */
   MMG5_SAFE_CALLOC( (*q)->root,(*q)->ncells_max, MMG5_MIBOctree_s, return 0);
 
-  /** Creation of the 8 Cells of the minimal octree */
-  (*q)->nxt   = 8;
-  depth       = 1;
-  for ( i=0; i<MMG3D_NBSONS; ++i ) {
-    for ( i=0; i<MMG3D_NBSONS; ++i ) {
-      (*q)->root[i].sons[i] = MMG3D_NOSONS; //no sons
-    }
-    (*q)->root[i].depth = depth;
+  /** Creation of the 1 Cell of the minimal octree */
+  (*q)->nxt   = 1;
+  for ( i=0; i<MMG3D_SIZE_OCTREESONS; ++i ) {
+    (*q)->root[0].sons[i] = MMG3D_NOSONS; //no sons
   }
+  (*q)->root[0].depth   = 0;
 
   /** Creation of the linked list of cells */
-  for ( i=MMG3D_NBSONS; i<(*q)->ncells_max-1; ++i ) {
+  for ( i= 1; i<(*q)->ncells_max-1; ++i ) {
     (*q)->root[i].depth = i+1;
   }
 
@@ -156,7 +152,7 @@ int MMG3D_newMIBOctree_s( MMG5_pMesh mesh,MMG5_pMIBOctree *root,int depth ) {
 
   q->is_filled = 0;
 
-  for ( i=0; i<MMG3D_NBSONS; ++i ) {
+  for ( i=0; i< MMG3D_SIZE_OCTREESONS; ++i ) {
     q->sons[i] = MMG3D_NOSONS; //no sons
   }
 
@@ -171,7 +167,7 @@ int MMG3D_newMIBOctree_s( MMG5_pMesh mesh,MMG5_pMIBOctree *root,int depth ) {
  *
  * \return 1 if success, 0 if fail, -1 if we are at depth max.
  *
- * Split a MIBOctree cell \ref q into \ref MMG3D_NBSONS MLSOctree Cells.
+ * Split a MIBOctree cell \ref q into \ref  MMG3D_SIZE_OCTREESONS MLSOctree Cells.
  *
  */
 int MMG3D_split_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctree *root) {
@@ -179,7 +175,7 @@ int MMG3D_split_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctre
 
   /* If the depth of the cell allow the subdivision */
   if ( q->depth+1 < (*root)->depth_max) {
-    for ( i=0; i < MMG3D_NBSONS; ++i ) {
+    for ( i=0; i <  MMG3D_SIZE_OCTREESONS; ++i ) {
       q->sons[i] = (*root)->nxt;
 
       if ( !MMG3D_newMIBOctree_s(mesh,root,q->depth+1) ) {
@@ -218,6 +214,7 @@ int MMG3D_free_MIBOctree  ( MMG5_pMesh mesh,MMG5_pMIBOctree* q ) {
 
 /**
  * \param mesh pointer toward the mesh structure
+ * \param id_cell index of the cell to delete
  * \param root pointer toward the octree root
  *
  * \return 1 if success, 0 if fail.
@@ -243,7 +240,7 @@ int MMG3D_delMIBOctree_s( MMG5_pMesh mesh,int id_cell,MMG5_pMIBOctree *root ) {
  *
  * \return 1 if success, 0 if fail, -1 if we are at depth max.
  *
- * Merge the sons of a MIBOctree cell \ref q
+ * Merge the sons of an octree cell
  *
  */
 int  MMG3D_merge_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctree *root) {
@@ -256,7 +253,7 @@ int  MMG3D_merge_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctr
            __func__,__LINE__);
   }
 
-  for ( i=0; i < MMG3D_NBSONS; ++i ) {
+  for ( i=0; i <  MMG3D_SIZE_OCTREESONS; ++i ) {
     if ( !is_filled && (*root)->root[q->sons[i]].is_filled ) {
       is_filled = 1;
     }
@@ -266,8 +263,145 @@ int  MMG3D_merge_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctr
              __func__,__LINE__);
       return 0;
     }
+    q->sons[i] = MMG3D_NOSONS;
   }
   q->is_filled = is_filled;;
 
   return 1;
+}
+
+/**
+ * \param mesh pointer toward the mesh structure
+ * \param q pointer toward the MIBOctree cell
+ * \param root pointer toward the octree root
+ * \param np number of points (to be updated)
+ * \param nc number of leaf cells (to be updated)
+ *
+ * Count the number of cells and the number of corners of leaf cells in the
+ * octree branch.
+ *
+ */
+void MMG3D_count_MIBOctreeEntities(MMG5_MIBOctree_s* q,MMG5_pMIBOctree root,int *np,int *nc) {
+  int k;
+
+
+  if ( q->sons[0] == MMG3D_NOSONS ) {
+    (*np) += 8;
+    ++(*nc);
+  }
+  else {
+    for ( k=0; k< MMG3D_SIZE_OCTREESONS; ++k ) {
+      MMG3D_count_MIBOctreeEntities(root->root + q->sons[k],root,np,nc);
+    }
+  }
+
+  return;
+}
+
+/**
+ * \param inm file pointer
+ * \param mesh pointer toward the mesh structure
+ * \param q pointer toward the MIBOctree cell
+ * \param root pointer toward the octree root
+ * \param x_min minimal coordinates of the branch in the x direction
+ * \param y_min minimal coordinates of the branch in the y direction
+ * \param z_min minimal coordinates of the branch in the z direction
+ * \param x_max maximal coordinates of the branch in the x direction
+ * \param y_max maximal coordinates of the branch in the y direction
+ * \param z_max maximal coordinates of the branch in the z direction
+ *
+ * Write the Corners of leaf cells in the octree branch.
+ *
+ */
+void MMG3D_write_MIBOctreeCoor(FILE *inm,MMG5_MIBOctree_s* q,MMG5_pMIBOctree root,
+                               double x_min,double y_min,double z_min,
+                               double x_max,double y_max,double z_max) {
+  double x_mid,y_mid,z_mid;
+
+  if ( q->sons[0] == MMG3D_NOSONS ) {
+    /* Bottom left front corner */
+    fprintf(inm,"%.15lg %.15lg %.15lg\n",x_min,y_min,z_min);
+    /* Bottom right front corner */
+    fprintf(inm,"%.15lg %.15lg %.15lg\n",x_max,y_min,z_min);
+    /* Bottom right back corner */
+    fprintf(inm,"%.15lg %.15lg %.15lg\n",x_max,y_max,z_min);
+    /* Bottom left back corner */
+    fprintf(inm,"%.15lg %.15lg %.15lg\n",x_min,y_max,z_min);
+    /* Top left front corner */
+    fprintf(inm,"%.15lg %.15lg %.15lg\n",x_min,y_min,z_max);
+    /* Top right front corner */
+    fprintf(inm,"%.15lg %.15lg %.15lg\n",x_max,y_min,z_max);
+    /* Top right back corner */
+    fprintf(inm,"%.15lg %.15lg %.15lg\n",x_max,y_max,z_max);
+    /* Top left back corner */
+    fprintf(inm,"%.15lg %.15lg %.15lg\n",x_min,y_max,z_max);
+  }
+  else {
+    x_mid = ( x_max + x_min ) / 2.;
+    y_mid = ( y_max + y_min ) / 2.;
+    z_mid = ( z_max + z_min ) / 2.;
+
+    /* Bottom left front branch */
+    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[0],root,
+                              x_min,y_min,z_min,x_mid,y_mid,z_mid);
+
+    /* Bottom right front branch */
+    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[1],root,
+                              x_mid,y_min,z_min,x_max,y_mid,z_mid);
+
+    /* Bottom right back branch */
+    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[2],root,
+                              x_mid,y_mid,z_min,x_max,y_max,z_mid);
+
+    /* Bottom left back branch */
+    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[3],root,
+                              x_min,y_mid,z_min,x_mid,y_max,z_mid);
+
+    /* Top left front branch */
+    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[4],root,
+                              x_min,y_min,z_mid,x_mid,y_mid,z_max);
+
+    /* Top right front branch */
+    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[5],root,
+                              x_mid,y_min,z_mid,x_max,y_mid,z_max);
+
+    /* Top right back branch */
+    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[6],root,
+                              x_mid,y_mid,z_mid,x_max,y_max,z_max);
+
+    /* Top left back branch */
+    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[7],root,
+                              x_min,y_mid,z_mid,x_mid,y_max,z_max);
+
+  }
+
+  return;
+}
+
+/**
+ * \param inm file pointer
+ * \param mesh pointer toward the mesh structure
+ * \param q pointer toward the MIBOctree cell
+ * \param root pointer toward the octree root
+ * \param np index of current point (to be updated)
+ *
+ * Write the connectivity of the leaves cells in the octree branch.
+ *
+ */
+void MMG3D_write_MIBOctreeVertices(FILE *inm,MMG5_MIBOctree_s* q,MMG5_pMIBOctree root,int *np) {
+  int k;
+
+
+  if ( q->sons[0] == MMG3D_NOSONS ) {
+    fprintf(inm,"%d %d %d %d %d %d %d %d %d\n",MMG3D_SIZE_OCTREESONS,
+            (*np),(*np)+1,(*np)+2,(*np)+3,(*np)+4,(*np)+5,(*np)+6,(*np)+7);
+    (*np) += 8;
+  }
+  else {
+    for ( k=0; k< MMG3D_SIZE_OCTREESONS; ++k ) {
+      MMG3D_write_MIBOctreeVertices(inm,root->root + q->sons[k],root,np);
+    }
+  }
+
+  return;
 }
