@@ -83,7 +83,7 @@ int MMG3D_create_bbOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
  *
  */
 static inline
-int MMG3D_search_point(MMG5_MOctree_s *q) {
+int MMG3D_search_point(int *q) {
 
   return 0;
   return 1;
@@ -100,16 +100,16 @@ int MMG3D_search_point(MMG5_MOctree_s *q) {
  *
  */
 static inline
-int MMG3D_recursive_refine(MMG5_pMesh mesh, MMG5_MOctree_s *q) {
+int MMG3D_recursive_refine(MMG5_pMesh mesh, MMG5_MIBOctree_s *q) {
   int i = 0;
   int nb_sons = 0;
-  for (i = 0; i < q->nsons ; i++)
+  for (i = 0; i < 8 ; i++)
   {
-    MMG3D_search_point(&q->sons[i]);
+    // MMG3D_search_point(q->sons[i]);
     if (nb_sons > 1 && q->depth <= mesh->octree->depth_max)
     {
-      MMG3D_one_split_MOctree_s (mesh, &q->sons[i]);
-      MMG3D_recursive_refine( mesh, &q->sons[i]);
+      //MMG3D_split.....
+      // MMG3D_recursive_refine( mesh, q->sons[i]);
     }
   }
 
@@ -130,56 +130,6 @@ static inline
 int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
 
 
-    // printf("\n //////////////////////////// BEGIN TEST Octree ////////////////////////// \n");
-    //
-    // MMG5_MOctree_s* Neighbour;
-    // MMG5_MOctree_s* son_octree;
-    // // MMG5_ADD_MEM(mesh,sizeof(MMG5_MOctree_s),"MOctree neighbour",
-    // //              return 0);
-    // // MMG5_SAFE_MALLOC(Neighbour,1, MMG5_MOctree_s, return 0);
-    // // MMG3D_init_MOctree_s(mesh, Neighbour, 0, 1, 0 );
-    // Neighbour = mesh->octree->m_root;
-    // MMG3D_one_split_MOctree_s (mesh, Neighbour);
-    // son_octree = &mesh->octree->m_root->sons[0];
-    // MMG3D_one_split_MOctree_s (mesh, son_octree);
-    //
-    // printf(" //////// root //////////////\n");
-    // printf("length : %lf \n%lf \n%lf \n",mesh->octree->length[0],mesh->octree->length[1],mesh->octree->length[2]);
-    // printf("depth max : %d \n \n",mesh->octree->depth_max);
-    //
-    // printf(" //////// father //////////////\n");
-    // if (mesh->octree->root->father == NULL)
-    //   printf("father's father address = NULL \n",mesh->octree->m_root->father);
-    // else
-    //   printf("father's father address = %d \n",mesh->octree->m_root->father);
-    // printf("father address = %d \n",mesh->octree->m_root);
-    // printf("coords : %d %d %d\n",mesh->octree->m_root->coordoct[0],mesh->octree->m_root->coordoct[1],mesh->octree->m_root->coordoct[2]);
-    // printf("father depth : %d \n",mesh->octree->m_root->depth);
-    // printf("leaf ? : %d \n",mesh->octree->m_root->leaf);
-    // printf("nb_sons : %d \n  \n",mesh->octree->m_root->nsons);
-    //
-    // /////////////
-    // printf(" //////// sons //////////////\n");
-    // printf("addresse de 1  = %d \n",Neighbour->sons);
-    // printf("coord : %d \n%d \n%d \n",Neighbour->sons[1].coordoct[0],Neighbour->sons[1].coordoct[1],Neighbour->sons[1].coordoct[2]);
-    // printf("coord v2 : %d \n%d \n%d \n",mesh->octree->m_root->sons[1].coordoct[0],mesh->octree->m_root->sons[1].coordoct[1],mesh->octree->m_root->sons[1].coordoct[2]);
-    // printf("son depth : %d \n",Neighbour->sons[0].depth);
-    // if (Neighbour->sons[5].father == NULL)
-    //   printf("father address = NULL \n",Neighbour->sons[5].father);
-    // else
-    //   printf("father address = %d \n\n",Neighbour->sons[5].father);
-    //
-    // printf(" //////// son's sons //////////////\n");
-    // printf("addresse de 1  = %d \n",son_octree->sons);
-    // printf("coord : %d \n%d \n%d \n",son_octree->sons[1].coordoct[0],son_octree->sons[1].coordoct[1],son_octree->sons[1].coordoct[2]);
-    // printf("coord v2 : %d \n%d \n%d \n",mesh->octree->m_root->sons[0].sons[1].coordoct[0],mesh->octree->m_root->sons[0].sons[1].coordoct[1],mesh->octree->m_root->sons[0].sons[1].coordoct[2]);
-    // printf("son depth : %d \n",son_octree->sons[0].depth);
-    // if (son_octree->sons[5].father == NULL)
-    //   printf("father address = NULL \n",son_octree->sons[5].father);
-    // else
-    //   printf("father address = %d \n",son_octree->sons[5].father);
-    //
-    //
     // printf("\n //////////////////////////// BEGIN TEST points ////////////////////////// \n");
     // int i = 0;
     // for (i = 1 ; i < mesh->np ; i++)
@@ -190,10 +140,9 @@ int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
     //
     // printf("\n //////////////////////////// BEGIN Algo ////////////////////////// \n");
 
-    MMG5_MOctree_s* Neighbour;
-    Neighbour = mesh->octree->m_root;
-    MMG3D_one_split_MOctree_s (mesh, mesh->octree->m_root);
-    MMG3D_recursive_refine( mesh, mesh->octree->m_root);
+    MMG5_MIBOctree_s* Neighbour;
+    Neighbour = mesh->iboctree->root;
+    MMG3D_recursive_refine( mesh, Neighbour);
 
 
 
