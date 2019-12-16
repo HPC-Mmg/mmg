@@ -90,7 +90,6 @@ int MMG3D_loadMesh_opened(MMG5_pMesh mesh,FILE *inm,int bin) {
   int         npreq,ntreq,nereq,nedreq,nqreq,ncor,ned,ng,iswp;
   int         binch,bdim,bpos,i,k,ip,idn;
   int         *ina,v[3],ref,nt,na,nr,ia,aux,nref;
-  char        *ptr;
   char        chaine[MMG5_FILESTR_LGTH],strskip[MMG5_FILESTR_LGTH];
 
   posnp = posnt = posne = posncor = 0;
@@ -987,7 +986,6 @@ int MMG3D_loadMesh_opened(MMG5_pMesh mesh,FILE *inm,int bin) {
 int MMG3D_loadMesh(MMG5_pMesh mesh,const char *filename) {
   FILE*       inm;
   int         bin,ier;
-  char        *data;
 
   ier = MMG3D_openMesh(mesh,filename,&inm,&bin);
   if( ier < 1 ) return ier;
@@ -1440,12 +1438,10 @@ int MMG3D_loadVTKGrid(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename) {
  * \param filename pointer toward the name of file.
  * \return 0 if failed, 1 otherwise.
  *
- * Save an octree as an unstructured grid at vtk file format (.vtk extension)
- *
- * \warning For debug purposes only, really inefficient, each at the intersection of multiple
+ * Save a MLSoctree as an unstructured grid at vtk file format (.vtk extension)
  *
  */
-int MMG3D_saveVTKOctree(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename) {
+int MMG3D_saveVTKMLSOctree(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename) {
   FILE             *inm;
   MMG5_MLSOctree_s   *q;
   MMG5_pPoint       ppt;
@@ -1560,6 +1556,92 @@ int MMG3D_saveVTKOctree(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename) {
   }
 
 
+  fclose(inm);
+
+  return 1;
+}
+
+/**
+ * \param mesh pointer toward the mesh structure.
+ * \param filename pointer toward the name of file.
+ * \return 0 if failed, 1 otherwise.
+ *
+ * Save a MIBOctree as an unstructured grid at vtk file format (.vtk extension)
+ *
+ */
+int MMG3D_saveVTKMIBOctree(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename) {
+  FILE             *inm;
+  int               k,np,nc;
+  char             *data,*ptr;
+  static const int  cell_type = 12;
+
+  MMG5_SAFE_CALLOC(data,strlen(filename)+7,char,return 0);
+
+  strcpy(data,filename);
+  ptr = strstr(data,".vtk");
+  if ( !ptr ) {
+    /* missing .vtk extension */
+    strcat(data,".vtk");
+  }
+  else {
+    ptr = strstr(data,".vtk.o.vtk");
+    if ( !ptr ) {
+      /* User hasn't provided an output file name */
+      ptr = strstr(data,".vtk.o");
+      if ( ptr ) {
+        /* Default output filename: remove it and rename the output .o.vtk */
+        *ptr = '\0';
+        strcat(data,".o.vtk");
+      }
+    }
+  }
+
+  if( !(inm = fopen(data,"w")) ) {
+    fprintf(stderr,"  ** UNABLE TO OPEN %s.\n",data);
+    MMG5_SAFE_FREE(data);
+    return 0;
+  }
+
+  if ( mesh->info.imprim >= 0 )
+    fprintf(stdout,"  %%%% %s OPENED\n",data);
+
+  MMG5_SAFE_FREE(data);
+
+  if ( sol && sol->m ) {
+    printf("  ## Warning:%s:%d: Solution saving not implemented.\n"
+           "             Solution field ignored.\n",__func__,__LINE__);
+  }
+
+  /* Header */
+  fprintf(inm,"%s\n","# vtk DataFile Version 2.0");
+  fprintf(inm,"%s\n\n",mesh->namein);
+  fprintf(inm,"%s\n\n","ASCII");
+  fprintf(inm,"%s\n\n","DATASET UNSTRUCTURED_GRID");
+
+  // Remark : very bad implementation, each cell save its 4 corners!!!!
+
+  /** Step 1 : count and save the number of points */
+  np = nc = 0;
+  MMG3D_count_MIBOctreeEntities(&mesh->iboctree->root[0],mesh->iboctree,&np,&nc);
+
+  fprintf(inm,"%s %d %s\n","POINTS",np,"double");
+
+  MMG3D_write_MIBOctreeCoor(inm,&mesh->iboctree->root[0],mesh->iboctree,
+                            0.,0.,0.,1.,1.,1.);
+
+  /** Step 2 : save the leaves */
+  fprintf(inm,"\n%s %d %d\n","CELLS",nc,(MMG3D_SIZE_OCTREESONS+1)*nc);
+
+  np = 0;
+  MMG3D_write_MIBOctreeVertices(inm,&mesh->iboctree->root[0],mesh->iboctree,&np);
+
+  /** Step 3 : save the leaves types */
+  fprintf(inm,"\n%s %d\n","CELL_TYPES",nc);
+  for ( k=0; k<nc; ++k ) {
+    fprintf(inm,"%d\n",cell_type);
+  }
+
+  // WARNING: the solution is not saved
   fclose(inm);
 
   return 1;

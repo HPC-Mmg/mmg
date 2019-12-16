@@ -630,7 +630,7 @@ int MMG3D_convert_grid2tetmesh(MMG5_pMesh mesh, MMG5_pSol sol) {
 
 #ifndef NDEBUG
   MMG3D_check_octreeSons ( mesh->octree->root );
-  if ( !MMG3D_saveVTKOctree(mesh,sol,mesh->nameout) ) {
+  if ( !MMG3D_saveVTKMLSOctree(mesh,sol,mesh->nameout) ) {
     fprintf(stderr,"\n  ## Warning: unable to save the coarsen octree\n");
   }
 #endif

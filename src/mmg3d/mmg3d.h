@@ -216,6 +216,19 @@ int MMG5_delone_MLSOctree(MMG5_pMesh mesh,MMG5_pSol sol,int ip,int *list,int ili
 int MMG3D_locatePoint( MMG5_pMesh  mesh, MMG5_pPoint ppt );
 int MMG3D_delete_octree ( MMG5_pMesh mesh );
 
+/* MIBOctree prototypes */
+int MMG3D_init_MIBOctree  ( MMG5_pMesh mesh, MMG5_pMIBOctree *q );
+int MMG3D_newMIBOctree_s( MMG5_pMesh mesh,MMG5_pMIBOctree *root,int depth );
+int MMG3D_split_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctree *root);
+int MMG3D_free_MIBOctree  ( MMG5_pMesh mesh,MMG5_pMIBOctree* q );
+int MMG3D_delMIBOctree_s( MMG5_pMesh mesh,int id_cell,MMG5_pMIBOctree *root );
+int  MMG3D_merge_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctree *root);
+void MMG3D_count_MIBOctreeEntities(MMG5_MIBOctree_s*,MMG5_pMIBOctree,int*,int*);
+int MMG3D_saveVTKMIBOctree(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename);
+void MMG3D_write_MIBOctreeCoor(FILE *inm,MMG5_MIBOctree_s* q,MMG5_pMIBOctree root,
+                               double,double,double,double,double,double);
+void MMG3D_write_MIBOctreeVertices(FILE*,MMG5_MIBOctree_s*,MMG5_pMIBOctree,int*);
+
 int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol);
 
 
@@ -518,7 +531,8 @@ int  MMG5_movtet(MMG5_pMesh mesh,MMG5_pSol met,MMG3D_pPROctree PROctree,
                   int improveVol,int maxit,int testmark);
 int  MMG5_swpmsh(MMG5_pMesh mesh,MMG5_pSol met,MMG3D_pPROctree PROctree, int);
   int  MMG5_swptet(MMG5_pMesh mesh,MMG5_pSol met,double,double,MMG3D_pPROctree, int,int);
-int MMG3D_saveVTKOctree(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename);
+int MMG3D_saveVTKMLSOctree(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename);
+int MMG3D_saveVTKMIBOctree(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename);
 
 /* pointers */
 /* init structures */
