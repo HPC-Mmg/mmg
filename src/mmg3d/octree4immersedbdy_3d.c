@@ -64,6 +64,11 @@ int MMG3D_create_bbOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
   if ( !MMG3D_init_MIBOctree(mesh,&mesh->iboctree) )
     return 0;
 
+ // MMG3D_split_MIBOctree_s ( mesh,&mesh->iboctree->root[0],&mesh->iboctree );
+ // MMG3D_split_MIBOctree_s ( mesh,mesh->iboctree->root + mesh->iboctree->root[0].sons[1],&mesh->iboctree );
+ // MMG3D_split_MIBOctree_s ( mesh,mesh->iboctree->root + mesh->iboctree->root[0].sons[3],&mesh->iboctree );
+  //MMG3D_merge_MIBOctree_s ( mesh,mesh->iboctree->root + mesh->iboctree->root[0].sons[1],&mesh->iboctree );
+
   return 1;
 }
 

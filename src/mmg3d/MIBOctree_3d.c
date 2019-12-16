@@ -265,7 +265,7 @@ int  MMG3D_merge_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctr
     }
     q->sons[i] = MMG3D_NOSONS;
   }
-  q->is_filled = is_filled;;
+  q->is_filled = is_filled;
 
   return 1;
 }
