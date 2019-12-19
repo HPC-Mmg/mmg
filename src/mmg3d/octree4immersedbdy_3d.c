@@ -64,10 +64,20 @@ int MMG3D_create_bbOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
   if ( !MMG3D_init_MIBOctree(mesh,&mesh->iboctree) )
     return 0;
 
- // MMG3D_split_MIBOctree_s ( mesh,&mesh->iboctree->root[0],&mesh->iboctree );
- // MMG3D_split_MIBOctree_s ( mesh,mesh->iboctree->root + mesh->iboctree->root[0].sons[1],&mesh->iboctree );
- // MMG3D_split_MIBOctree_s ( mesh,mesh->iboctree->root + mesh->iboctree->root[0].sons[3],&mesh->iboctree );
-  //MMG3D_merge_MIBOctree_s ( mesh,mesh->iboctree->root + mesh->iboctree->root[0].sons[1],&mesh->iboctree );
+ MMG3D_split_MIBOctree_s ( mesh,&mesh->iboctree->root[0],&mesh->iboctree );
+ printf("1\n");
+
+ MMG3D_split_MIBOctree_s ( mesh,mesh->iboctree->root + mesh->iboctree->root[0].sons[1],&mesh->iboctree );
+ MMG3D_split_MIBOctree_s ( mesh,mesh->iboctree->root + mesh->iboctree->root[0].sons[3],&mesh->iboctree );
+ MMG5_MIBOctree_s* Neighbour;
+ Neighbour = mesh->iboctree->root;// + mesh->iboctree->root[0].sons[1];
+ MMG5_MIBOctree_s* Neighbour2;
+ Neighbour2 = mesh->iboctree->root + mesh->iboctree->root[0].sons[3];
+ printf("2 %d\n", Neighbour->sons[7]);
+ printf("2.1 %d %d \n",mesh->iboctree->root,  mesh->iboctree->root[8].depth);
+ MMG3D_split_MIBOctree_s ( mesh,mesh->iboctree->root + mesh->iboctree->root[0].sons[2],&mesh->iboctree );
+ printf("3\n");
+  MMG3D_merge_MIBOctree_s ( mesh,mesh->iboctree->root + mesh->iboctree->root[0].sons[1],&mesh->iboctree );
 
   return 1;
 }
@@ -119,6 +129,38 @@ int MMG3D_recursive_refine(MMG5_pMesh mesh, MMG5_MIBOctree_s *q) {
 
 /**
  * \param mesh pointer toward a mesh structure.
+ * \param q pointer toward the MOctree cell
+ *
+ * \return 1 if success, 0 if fail.
+ *
+ * Recursive algorithme used to refine the octree
+ *
+ */
+static inline
+int64_t coords_into_Z_coord(int x, int y, int z) {
+  if (x > 2097151 || y > 2097151 || z > 2097151)
+    printf("\n %s:%d:\n%s: Warning ! Coordinates may be too big to be converted into Z-order\n",__FILE__,__LINE__,__func__);
+
+  int i = 0, j = 0;
+
+  int64_t Z = 0;
+  for (i = 0 ; i < 21 ; i++)
+  {
+    j = 2*i;
+    Z += (int64_t)(x & (1<<i)) << j;
+    j++;
+    Z += (int64_t)(y & (1<<i)) << j;
+    j++;
+    Z += (int64_t)(z & (1<<i)) << j;
+    // printf("%d % d // %lld %lld \n", i, j , 1<<i, ((1<<i) << j));
+  }
+  return Z;
+}
+
+
+
+/**
+ * \param mesh pointer toward a mesh structure.
  * \param sol pointer toward a solution structure.
  *
  * \return 1 if success, 0 if fail.
@@ -130,15 +172,25 @@ static inline
 int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
 
 
-    // printf("\n //////////////////////////// BEGIN TEST points ////////////////////////// \n");
-    // int i = 0;
-    // for (i = 1 ; i < mesh->np ; i++)
-    // {
-    //   printf("ref : %d  ; coord : %f %f %f \n",mesh->point[i].c[0], mesh->point[i].c[1], mesh->point[i].c[2]);
-    // }
-    //
-    //
-    // printf("\n //////////////////////////// BEGIN Algo ////////////////////////// \n");
+    printf("\n //////////////////////////// BEGIN TEST points ////////////////////////// \n");
+    int i = 0, j = 0;
+    for (i = 1 ; i < mesh->np ; i++)
+    {
+      printf("ref : %d  ; coord : %f %f %f \n",mesh->point[i].c[0], mesh->point[i].c[1], mesh->point[i].c[2]);
+    }
+
+
+    printf("\n //////////////////////////// BEGIN Algo ////////////////////////// \n");
+
+    int x = 0;
+    int y = 0;
+    int z = 2097151;
+    int64_t A ;
+    A = coords_into_Z_coord(x, y, z);
+    printf("Result = %lld\n", A);
+    // printf("%d\n", sizeof(int32_t));
+
+
 
     MMG5_MIBOctree_s* Neighbour;
     Neighbour = mesh->iboctree->root;
@@ -146,7 +198,7 @@ int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
 
 
 
-  // printf("\n %s:%d:\n%s: FUNCTION TO IMPLEMENT\n",__FILE__,__LINE__,__func__);
+  printf("\n %s:%d:\n%s: FUNCTION TO IMPLEMENT\n",__FILE__,__LINE__,__func__);
   return 0;
 
   return 1;
