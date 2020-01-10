@@ -63,7 +63,7 @@ int MMG3D_init_MIBOctree  ( MMG5_pMesh mesh, MMG5_pMIBOctree *q ) {
   // nbBitsInt    = sizeof(int64_t)*8;
   // (*q)->depth_max = nbBitsInt - 1;
   (*q)->depth_max = 20;      //value to use
-  // (*q)->depth_max = 4;    // test value
+  // (*q)->depth_max = 8;    // test value
 
 
   /** Computation of initial maximal number of cells from the number of points */
@@ -86,6 +86,7 @@ int MMG3D_init_MIBOctree  ( MMG5_pMesh mesh, MMG5_pMIBOctree *q ) {
     return 0;
   }
 
+  // (*q)->ncells_max = 1000;
   /** Check that we have enough memory to allocate the array of cells */
   MMG5_ADD_MEM(mesh,(*q)->ncells_max*sizeof(MMG5_MIBOctree_s),"MIBOctree_s array",
                return 0);
@@ -124,6 +125,9 @@ int MMG3D_newMIBOctree_s( MMG5_pMesh mesh,MMG5_pMIBOctree *root, int depth, int6
   size_t            ncells_max;
   int               i;
   int               j;
+  int               expnt;
+  int64_t           a;
+
 
   if ( depth > (*root)->depth_max ) {
     printf(" ## Error:%s:%d: Attempt to create a new octree cell at depth %d"
@@ -154,7 +158,7 @@ int MMG3D_newMIBOctree_s( MMG5_pMesh mesh,MMG5_pMIBOctree *root, int depth, int6
   q = (*root)->root + i;
   // printf("%d %d %d\n", i, (*root)->root[i].depth, q );
   j = i % MMG3D_SIZE_OCTREESONS;
-  int e = 3*((*root)->depth_max - depth);
+  expnt = 3*((*root)->depth_max - depth);
 
 
   q->depth  = depth;
@@ -162,27 +166,27 @@ int MMG3D_newMIBOctree_s( MMG5_pMesh mesh,MMG5_pMIBOctree *root, int depth, int6
   q->is_filled = 0;
   q->Z_coord = z;
 
-  int64_t a = 1;
+  a = 1;
 
   if ( j == 2){
-    q->Z_coord += a << e;
+    q->Z_coord += a << expnt;
   }else if (j == 3){
-    q->Z_coord += a << e + 1;
+    q->Z_coord += a << (expnt + 1);
   }else if (j == 4){
-    q->Z_coord += a << e;
-    q->Z_coord += a << e + 1;
+    q->Z_coord += a << expnt;
+    q->Z_coord += a << (expnt + 1);
   }else if (j == 5){
-    q->Z_coord += a << e + 2;
+    q->Z_coord += a << (expnt + 2);
   }else if (j == 6){
-    q->Z_coord += a << e;
-    q->Z_coord += a << e + 2;
+    q->Z_coord += a << expnt;
+    q->Z_coord += a << (expnt + 2);
   }else if (j == 7){
-    q->Z_coord += a << e + 1;
-    q->Z_coord += a << e + 2;
+    q->Z_coord += a << (expnt + 1);
+    q->Z_coord += a << (expnt + 2);
   }else if (j == 0){
-    q->Z_coord += a << e;
-    q->Z_coord += a << e + 1;
-    q->Z_coord += a << e + 2;
+    q->Z_coord += a << expnt;
+    q->Z_coord += a << (expnt + 1);
+    q->Z_coord += a << (expnt + 2);
   }
   // printf("son[%d], depth : %d , Z_coord : s%lld \n", j, e/3, q->Z_coord );
 
@@ -220,7 +224,7 @@ int MMG3D_split_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctre
         return 0;
       }
     }
-    q->is_filled = 0;
+    // q->is_filled = 0;
 
   }
   else {

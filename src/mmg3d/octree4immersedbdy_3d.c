@@ -135,15 +135,17 @@ int MMG3D_recursive_refine(int64_t a, int64_t b, MMG5_pMesh mesh, MMG5_MIBOctree
     int j = 0;
     MMG5_MIBOctree_s* in_son = mesh->iboctree->root + q->sons[0];
     // Find the son where is a
-    while ((j < 8) && ((in_son->Z_coord & comp_value) != ( a & comp_value)))
+    while ((j < 7) && ((in_son->Z_coord & comp_value) != ( a & comp_value)))
     {
+      // printf("son[%d] : a : %lld;  Z_coord : %lld; a&comp : %lld; Z_coord&comp : %lld\n", j, a, in_son->Z_coord, (a & comp_value), (in_son->Z_coord & comp_value));
       j += 1;
       in_son = mesh->iboctree->root + q->sons[j];
-      // printf("son[%d] : a : %lld;  Z_coord : %lld; a&comp : %lld; Z_coord&comp : %lld\n", j, a, in_son->Z_coord, (a & comp_value), (in_son->Z_coord & comp_value));
     }
-
-    MMG3D_split_MIBOctree_s ( mesh,in_son,&mesh->iboctree );
-
+    // printf("Selected son : %d\n", j);
+    if (in_son->is_filled == 0){
+      MMG3D_split_MIBOctree_s ( mesh,in_son,&mesh->iboctree );
+      in_son->is_filled = 1 ;
+    }
     MMG3D_recursive_refine( a, b, mesh, in_son, &mesh->iboctree);
 
   }
@@ -221,10 +223,11 @@ int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
   int i = 0, j = 0, k = 0;
 
   //// POINTS TESTS à ENLEVER  ou  Changer les points pour tester/////
-  mesh->point[5].c[0]= 0.40625;
+  mesh->point[5].c[0]= 0.376;
   mesh->point[5].c[1]= 0.25;
   mesh->point[5].c[2]= 0.75;
-  mesh->point[6].c[0]= 0.40625001;
+  // mesh->point[6].c[0]= 0.37605;
+  mesh->point[6].c[0]= 0.377;
   mesh->point[6].c[1]= 0.25;
   mesh->point[6].c[2]= 0.75;
 
@@ -232,14 +235,6 @@ int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
   {
     printf("ref : %d  ; coord : %f %f %f \n",i-1, mesh->point[i].c[0], mesh->point[i].c[1], mesh->point[i].c[2]);
   }
-
-  //// POINTS TESTS à ENLEVER /////
-  mesh->point[5].c[0]= 0.40625;
-  mesh->point[5].c[1]= 0.25;
-  mesh->point[5].c[2]= 0.75;
-  mesh->point[6].c[0]= 0.40625001;
-  mesh->point[6].c[1]= 0.25;
-  mesh->point[6].c[2]= 0.75;
 
 
   printf("\n //////////////////////////// BEGIN Algo ////////////////////////// \n");
@@ -254,8 +249,8 @@ int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
       scaled_coord[j] = (int) (mesh->point[i].c[j]*(1 << mesh->iboctree->depth_max)); // multiply by 2^{depth_max}
     }
     points_Z[i-1] = coords_into_Z_coord(scaled_coord[0], scaled_coord[1], scaled_coord[2]);
-    printf("scaled_coord : %d %d %d \n",scaled_coord[0], scaled_coord[1], scaled_coord[2]);
-    printf("corresponding Z_coord : %lld \n\n",points_Z[i-1]);
+    // printf("scaled_coord : %d %d %d \n",scaled_coord[0], scaled_coord[1], scaled_coord[2]);
+    // printf("corresponding Z_coord : %lld \n\n",points_Z[i-1]);
   }
 
   MMG3D_split_MIBOctree_s ( mesh,&mesh->iboctree->root[0],&mesh->iboctree );
@@ -264,7 +259,7 @@ int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
   {
     for (j = i+1 ; j < mesh->np ; j++)
     {
-      printf("i : %d ; j : %d \n",i,j);
+      // printf("i : %d ; j : %d \n",i,j);
       MMG3D_recursive_refine( points_Z[i], points_Z[j], mesh, &mesh->iboctree->root[0], &mesh->iboctree);
     }
 
@@ -273,8 +268,8 @@ int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
   free(points_Z);
   free(scaled_coord);
 
-  printf("\n %s:%d:\n%s: FUNCTION TO IMPLEMENT\n",__FILE__,__LINE__,__func__);
-  return 0;
+  // printf("\n %s:%d:\n%s: FUNCTION TO IMPLEMENT\n",__FILE__,__LINE__,__func__);
+  // return 0;
 
   return 1;
 }
@@ -375,27 +370,26 @@ int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol) {
             " Exit program.\n");
     return 0;
   }
-
-  /* Octree refinement in order to have 1 boundary entity (triangle) per leaf */
-  if ( !MMG3D_refine_octreeOnTria(mesh,sol) ) {
-    fprintf(stderr,"\n  ## Octree refinement (over triangles) problem."
-            " Exit program.\n");
-    return 0;
-  }
-
-  /* 2:1 balancing of the octree  */
-  if ( !MMG3D_balance_octree(mesh,sol) ) {
-    fprintf(stderr,"\n  ## Octree refinement (over triangles) problem."
-            " Exit program.\n");
-    return 0;
-  }
+  //
+  // /* Octree refinement in order to have 1 boundary entity (triangle) per leaf */
+  // if ( !MMG3D_refine_octreeOnTria(mesh,sol) ) {
+  //   fprintf(stderr,"\n  ## Octree refinement (over triangles) problem."
+  //           " Exit program.\n");
+  //   return 0;
+  // }
+  //
+  // /* 2:1 balancing of the octree  */
+  // if ( !MMG3D_balance_octree(mesh,sol) ) {
+  //   fprintf(stderr,"\n  ## Octree refinement (over triangles) problem."
+  //           " Exit program.\n");
+  //   return 0;
+  // }
 
   /* Unscale the surface mesh and the octree */
   if ( !MMG5_unscaleMesh_i( mesh, NULL,sol,MMG3D_IMMERSRAT ) ) {
     fprintf(stderr,"\n  ## Mesh scaling problem. Exit program.\n");
     return 0;
   }
-
 #ifndef NDEBUG
   // To remove when the octree creation will be ok
   if ( !MMG3D_saveVTKMIBOctree(mesh,sol,"finalOctree.vtk") ) {
@@ -403,6 +397,7 @@ int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol) {
   }
 #endif
 
+  printf("vtk save was done\n");
   /* Memory release */
   MMG3D_delete_octree (mesh);
 
