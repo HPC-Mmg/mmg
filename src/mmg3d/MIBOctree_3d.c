@@ -184,7 +184,7 @@ int MMG3D_newMIBOctree_s( MMG5_pMesh mesh,MMG5_pMIBOctree *root, int depth, int6
     q->Z_coord += a << e + 1;
     q->Z_coord += a << e + 2;
   }
-  // printf("%d %d %lld \n", j, e/3, q->Z_coord );
+  // printf("son[%d], depth : %d , Z_coord : s%lld \n", j, e/3, q->Z_coord );
 
 
   for ( i=0; i< MMG3D_SIZE_OCTREESONS; ++i ) {

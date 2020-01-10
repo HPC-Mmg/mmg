@@ -127,28 +127,37 @@ int MMG3D_recursive_refine(int64_t a, int64_t b, MMG5_pMesh mesh, MMG5_MIBOctree
 
   comp_value = (int64_t) 7 << (3*((*root)->depth_max - q->depth - 1));   // aka 111 << 2^{n}
 
-
-  // printf("%d %d %d\n", ((*root)->depth_max - q->depth - 1), 3*((*root)->depth_max - q->depth - 1), 7 << 3*((*root)->depth_max - q->depth - 1));
-
-  // printf("%lld %lld %lld %lld %lld\n", comp_value, a, b, (a & comp_value), (b & comp_value));
+  // printf("comp : %lld; a : %lld; b : %lld; a&comp : %lld; b&compt : %lld\n", comp_value, a, b, (a & comp_value), (b & comp_value));
+  // compare the trio 000 at the same depth for a and b
   if (((a & comp_value) == ( b & comp_value)) && (q->depth < (*root)->depth_max - 1) )
   {
-    // printf("%d %d %d %d\n", q->depth, (*root)->depth_max, (*root)->depth_max - q->depth - 1, q );
+    // printf("depth : %d; depth_max : %d; reverse depth : %d \n", q->depth, (*root)->depth_max, (*root)->depth_max - q->depth - 1 );
     int j = 0;
     MMG5_MIBOctree_s* in_son = mesh->iboctree->root + q->sons[0];
+    // Find the son where is a
     while ((j < 8) && ((in_son->Z_coord & comp_value) != ( a & comp_value)))
     {
       j += 1;
       in_son = mesh->iboctree->root + q->sons[j];
-      // printf("%d : %lld %lld %lld %lld\n", j, a, in_son->Z_coord, (a & comp_value), (in_son->Z_coord & comp_value));
+      // printf("son[%d] : a : %lld;  Z_coord : %lld; a&comp : %lld; Z_coord&comp : %lld\n", j, a, in_son->Z_coord, (a & comp_value), (in_son->Z_coord & comp_value));
     }
-    printf("%d %d %d %d %d\n", j, q->depth, (*root)->depth_max, (*root)->depth_max - q->depth - 1, q );
 
     MMG3D_split_MIBOctree_s ( mesh,in_son,&mesh->iboctree );
 
     MMG3D_recursive_refine( a, b, mesh, in_son, &mesh->iboctree);
 
   }
+  // for (i = 0; i < 8 ; i++)
+  // {
+  //   // MMG3D_search_point(q->sons[i]);
+  //   if (nb_sons > 1 && q->depth <= mesh->octree->depth_max)
+  //   {
+  //     //MMG3D_split.....
+  //     // MMG3D_recursive_refine( mesh, q->sons[i]);
+  //   }
+  // }
+
+  // // Old algorithm
   // for (i = 0; i < 8 ; i++)
   // {
   //   // MMG3D_search_point(q->sons[i]);
@@ -211,7 +220,7 @@ int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
   printf("\n //////////////////////////// BEGIN TEST points ////////////////////////// \n");
   int i = 0, j = 0, k = 0;
 
-  //// POINTS TESTS à ENLEVER /////
+  //// POINTS TESTS à ENLEVER  ou  Changer les points pour tester/////
   mesh->point[5].c[0]= 0.40625;
   mesh->point[5].c[1]= 0.25;
   mesh->point[5].c[2]= 0.75;
@@ -224,34 +233,39 @@ int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
     printf("ref : %d  ; coord : %f %f %f \n",i-1, mesh->point[i].c[0], mesh->point[i].c[1], mesh->point[i].c[2]);
   }
 
+  //// POINTS TESTS à ENLEVER /////
+  mesh->point[5].c[0]= 0.40625;
+  mesh->point[5].c[1]= 0.25;
+  mesh->point[5].c[2]= 0.75;
+  mesh->point[6].c[0]= 0.40625001;
+  mesh->point[6].c[1]= 0.25;
+  mesh->point[6].c[2]= 0.75;
 
 
   printf("\n //////////////////////////// BEGIN Algo ////////////////////////// \n");
 
-  // Mise à l'echelle des points
+  // Point scaling
   int64_t *points_Z = (int64_t*) calloc(mesh->np, sizeof(int64_t));
   int *scaled_coord = (int*) calloc(3, sizeof(int));
   for (i = 1 ; i <= mesh->np ; i++)
   {
     for (j = 0; j < 3 ; j++)
     {
-      scaled_coord[j] = (int) (mesh->point[i].c[j]*(1 << mesh->iboctree->depth_max)); // * 2^{depth_max}
+      scaled_coord[j] = (int) (mesh->point[i].c[j]*(1 << mesh->iboctree->depth_max)); // multiply by 2^{depth_max}
     }
     points_Z[i-1] = coords_into_Z_coord(scaled_coord[0], scaled_coord[1], scaled_coord[2]);
-    printf("coord : %d %d %d \n",scaled_coord[0], scaled_coord[1], scaled_coord[2]);
-    printf("%lld \n\n",points_Z[i-1]);
+    printf("scaled_coord : %d %d %d \n",scaled_coord[0], scaled_coord[1], scaled_coord[2]);
+    printf("corresponding Z_coord : %lld \n\n",points_Z[i-1]);
   }
 
   MMG3D_split_MIBOctree_s ( mesh,&mesh->iboctree->root[0],&mesh->iboctree );
 
-  for (i = 0 ; i < mesh->np - 1 ; i++)    // !!! à remettre a 0 pour le vrai
+  for (i = 0 ; i < mesh->np - 1 ; i++)
   {
     for (j = i+1 ; j < mesh->np ; j++)
     {
       printf("i : %d ; j : %d \n",i,j);
       MMG3D_recursive_refine( points_Z[i], points_Z[j], mesh, &mesh->iboctree->root[0], &mesh->iboctree);
-      // printf("/////////////////ABORT///////\n");
-      // abort();
     }
 
   }
