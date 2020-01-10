@@ -514,6 +514,8 @@ typedef struct MMG5_MIBOctree_s
   int    depth; /*!< depth of the cell in the octree or tracks of the linked
                  * list if the cell is not used */
   int8_t is_filled; /*!< is the cell filled */
+  int64_t Z_coord; /*!< is the cell filled */
+
 } MMG5_MIBOctree_s;
 
 /**
@@ -548,20 +550,6 @@ typedef struct MMG5_MLSOctree_s
   int coordoct[3]; /*<coordinates of the bottom right hand front corner of the octree */
 } MMG5_MLSOctree_s;
 
-/**
- *
- * MOctree cell: cellule for mesh generation from an octree (Modified version)
- *
- */
-typedef struct MMG5_MOctree_s
-{
-  struct MMG5_MOctree_s* father; /*!< pointer toward the father of the current cell */
-  struct MMG5_MOctree_s* sons; /*!< pointer toward the subtrees of the current cell */
-  int8_t nsons; /*!< number of sons */
-  int    depth; /*!< depth of the cell in the octree */
-  int8_t leaf; /*!< 1 if the cell is a leaf, 0 otherwise */
-  int coordoct[3]; /*<coordinates of the bottom right hand front corner of the octree */
-} MMG5_MOctree_s;
 
 
 /**
@@ -583,7 +571,6 @@ typedef struct
 {
   double          length[3]; /*!< length of the octree in each direction */
   MMG5_MLSOctree_s* root; /*!<  Pointer toward the first MLSOctree cell */
-  MMG5_MOctree_s* m_root; /*!<  Pointer toward the first MOctree cell */
   int             depth_max; /*!< Maximal depth of the octree */
   int             nspan_at_root; /*!< Number of span at root */
 } MMG5_MLSOctree;

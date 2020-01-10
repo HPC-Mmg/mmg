@@ -193,8 +193,6 @@ static const unsigned char MMG5_permedge[12][6] = {
 /* MLSOctree prototypes */
 int  MMG3D_init_MLSOctree    ( MMG5_pMesh,MMG5_pMLSOctree*,int, double length[3],int );
 int  MMG3D_init_MLSOctree_s  ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q, int ip, int depth, int8_t split_ls );
-int  MMG3D_init_MOctree_s  ( MMG5_pMesh mesh, MMG5_MOctree_s* q, int depth );
-int  MMG3D_one_split_MOctree_s ( MMG5_pMesh mesh, MMG5_MOctree_s* q);
 int  MMG3D_split_MLSOctree_s ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q, MMG5_pSol sol);
 int  MMG3D_set_splitls_MLSOctree ( MMG5_pMesh mesh, MMG5_MLSOctree_s* q, MMG5_pSol sol);
 
@@ -218,7 +216,7 @@ int MMG3D_delete_octree ( MMG5_pMesh mesh );
 
 /* MIBOctree prototypes */
 int MMG3D_init_MIBOctree  ( MMG5_pMesh mesh, MMG5_pMIBOctree *q );
-int MMG3D_newMIBOctree_s( MMG5_pMesh mesh,MMG5_pMIBOctree *root,int depth );
+int MMG3D_newMIBOctree_s( MMG5_pMesh mesh,MMG5_pMIBOctree *root,int depth, int64_t Z_coord );
 int MMG3D_split_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctree *root);
 int MMG3D_free_MIBOctree  ( MMG5_pMesh mesh,MMG5_pMIBOctree* q );
 int MMG3D_delMIBOctree_s( MMG5_pMesh mesh,int id_cell,MMG5_pMIBOctree *root );
