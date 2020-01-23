@@ -63,7 +63,7 @@ int MMG3D_init_MIBOctree  ( MMG5_pMesh mesh, MMG5_pMIBOctree *q ) {
   // nbBitsInt    = sizeof(int64_t)*8;
   // (*q)->depth_max = nbBitsInt - 1;
   (*q)->depth_max = 20;      //value to use
-  // (*q)->depth_max = 8;    // test value
+  // (*q)->depth_max = 5;    // test value
 
 
   /** Computation of initial maximal number of cells from the number of points */
@@ -188,7 +188,7 @@ int MMG3D_newMIBOctree_s( MMG5_pMesh mesh,MMG5_pMIBOctree *root, int depth, int6
     q->Z_coord += a << (expnt + 1);
     q->Z_coord += a << (expnt + 2);
   }
-  // printf("son[%d], depth : %d , Z_coord : s%lld \n", j, e/3, q->Z_coord );
+  // printf(" %d, son[%d], depth : %d , Z_coord : %lld \n", i, j, expnt/3, q->Z_coord );
 
 
   for ( i=0; i< MMG3D_SIZE_OCTREESONS; ++i ) {
@@ -328,6 +328,7 @@ void MMG3D_count_MIBOctreeEntities(MMG5_MIBOctree_s* q,MMG5_pMIBOctree root,int 
   if ( q->sons[0] == MMG3D_NOSONS ) {
     (*np) += 8;
     ++(*nc);
+
   }
   else {
     for ( k=0; k< MMG3D_SIZE_OCTREESONS; ++k ) {
@@ -389,13 +390,13 @@ void MMG3D_write_MIBOctreeCoor(FILE *inm,MMG5_MIBOctree_s* q,MMG5_pMIBOctree roo
     MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[1],root,
                               x_mid,y_min,z_min,x_max,y_mid,z_mid);
 
-    /* Bottom right back branch */
-    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[2],root,
-                              x_mid,y_mid,z_min,x_max,y_max,z_mid);
-
     /* Bottom left back branch */
-    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[3],root,
+    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[2],root,
                               x_min,y_mid,z_min,x_mid,y_max,z_mid);
+
+    /* Bottom right back branch */
+    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[3],root,
+                              x_mid,y_mid,z_min,x_max,y_max,z_mid);
 
     /* Top left front branch */
     MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[4],root,
@@ -405,13 +406,15 @@ void MMG3D_write_MIBOctreeCoor(FILE *inm,MMG5_MIBOctree_s* q,MMG5_pMIBOctree roo
     MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[5],root,
                               x_mid,y_min,z_mid,x_max,y_mid,z_max);
 
-    /* Top right back branch */
+    /* Top left back branch */
     MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[6],root,
+                              x_min,y_mid,z_mid,x_mid,y_max,z_max);
+
+    /* Top right back branch */
+    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[7],root,
                               x_mid,y_mid,z_mid,x_max,y_max,z_max);
 
-    /* Top left back branch */
-    MMG3D_write_MIBOctreeCoor(inm,root->root + q->sons[7],root,
-                              x_min,y_mid,z_mid,x_mid,y_max,z_max);
+
 
   }
 

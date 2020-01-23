@@ -93,24 +93,34 @@ int MMG3D_create_bbOctree(MMG5_pMesh mesh, MMG5_pSol sol) {
   return 1;
 }
 
-
-/**
- * \param mesh pointer toward a mesh structure.
- * \param q pointer toward the MOctree cell
- *
- * \return 1 if success, 0 if fail.
- *
- * Recursive algorithme used to refine the octree
- *
- */
+// Fonction pour écrire les Z-values ; à enlever
 static inline
-int MMG3D_search_point(int *q) {
+void MMG3D_print_Z(int64_t nbr, int n_0) {
+  int64_t tab[64];
+  int i;
+  int j;
+  printf("%lld\n",nbr );
 
-  return 0;
-  return 1;
+  for(i=0; nbr > 0; i++)
+  {
+    tab[i] = nbr%2;
+    nbr = nbr/2;
+  }
+  if (n_0 != 0){
+    for(j=0; j < n_0; j++)
+      printf(" 000");
+  }
+
+  for(i=i-1; i >= 0; i--)
+  {
+    if((i%3) == 2)
+      printf(" ");
+    printf("%d",tab[i]);
+  }
+  printf("\n");
+
 }
 
-
 /**
  * \param mesh pointer toward a mesh structure.
  * \param q pointer toward the MOctree cell
@@ -121,15 +131,22 @@ int MMG3D_search_point(int *q) {
  *
  */
 static inline
-int MMG3D_recursive_refine(int64_t a, int64_t b, MMG5_pMesh mesh, MMG5_MIBOctree_s *q, MMG5_pMIBOctree *root) {
+int MMG3D_recursive_refine(int64_t a, int64_t b, MMG5_pMesh mesh, MMG5_MIBOctree_s *q, MMG5_pMIBOctree *root, int *test_tab) {
   int i = 0;
   int64_t comp_value = 0;
 
-  comp_value = (int64_t) 7 << (3*((*root)->depth_max - q->depth - 1));   // aka 111 << 2^{n}
+  comp_value = (int64_t) 7 << (3*((*root)->depth_max - q->depth - 1));   // ie 111 << 2^{n}
+
+  // if(test_tab[8] == 1) {
+  //   MMG3D_print_Z(a,0);
+  //   MMG3D_print_Z(b,0);
+  //   MMG3D_print_Z(comp_value,q->depth);
+  //   printf("\n");
+  // }
 
   // printf("comp : %lld; a : %lld; b : %lld; a&comp : %lld; b&compt : %lld\n", comp_value, a, b, (a & comp_value), (b & comp_value));
   // compare the trio 000 at the same depth for a and b
-  if (((a & comp_value) == ( b & comp_value)) && (q->depth < (*root)->depth_max - 1) )
+  if ((q->depth < (*root)->depth_max - 1 ) && ((a & comp_value) == ( b & comp_value))  )
   {
     // printf("depth : %d; depth_max : %d; reverse depth : %d \n", q->depth, (*root)->depth_max, (*root)->depth_max - q->depth - 1 );
     int j = 0;
@@ -137,38 +154,30 @@ int MMG3D_recursive_refine(int64_t a, int64_t b, MMG5_pMesh mesh, MMG5_MIBOctree
     // Find the son where is a
     while ((j < 7) && ((in_son->Z_coord & comp_value) != ( a & comp_value)))
     {
+
       // printf("son[%d] : a : %lld;  Z_coord : %lld; a&comp : %lld; Z_coord&comp : %lld\n", j, a, in_son->Z_coord, (a & comp_value), (in_son->Z_coord & comp_value));
       j += 1;
       in_son = mesh->iboctree->root + q->sons[j];
     }
     // printf("Selected son : %d\n", j);
     if (in_son->is_filled == 0){
+      // if(test_tab[8] == 1) {
+      //   MMG3D_print_Z(a,0);
+      //   MMG3D_print_Z(b,0);
+      //   MMG3D_print_Z(comp_value,q->depth);
+      //   printf("Selected son : %d\n", j);
+      // }
       MMG3D_split_MIBOctree_s ( mesh,in_son,&mesh->iboctree );
       in_son->is_filled = 1 ;
+      // test_tab[j] += 1;
     }
-    MMG3D_recursive_refine( a, b, mesh, in_son, &mesh->iboctree);
+    // if(test_tab[8] == 1) {
+    //   printf("Selected son : %d\n", j);
+    //   MMG3D_print_Z(in_son->Z_coord,0);
+    // }
+    MMG3D_recursive_refine( a, b, mesh, in_son, &mesh->iboctree, test_tab);
 
   }
-  // for (i = 0; i < 8 ; i++)
-  // {
-  //   // MMG3D_search_point(q->sons[i]);
-  //   if (nb_sons > 1 && q->depth <= mesh->octree->depth_max)
-  //   {
-  //     //MMG3D_split.....
-  //     // MMG3D_recursive_refine( mesh, q->sons[i]);
-  //   }
-  // }
-
-  // // Old algorithm
-  // for (i = 0; i < 8 ; i++)
-  // {
-  //   // MMG3D_search_point(q->sons[i]);
-  //   if (nb_sons > 1 && q->depth <= mesh->octree->depth_max)
-  //   {
-  //     //MMG3D_split.....
-  //     // MMG3D_recursive_refine( mesh, q->sons[i]);
-  //   }
-  // }
 
   return 1;
 }
@@ -223,18 +232,18 @@ int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
   int i = 0, j = 0, k = 0;
 
   //// POINTS TESTS à ENLEVER  ou  Changer les points pour tester/////
-  mesh->point[5].c[0]= 0.376;
-  mesh->point[5].c[1]= 0.25;
-  mesh->point[5].c[2]= 0.75;
-  // mesh->point[6].c[0]= 0.37605;
-  mesh->point[6].c[0]= 0.377;
-  mesh->point[6].c[1]= 0.25;
-  mesh->point[6].c[2]= 0.75;
+  // mesh->point[26].c[0]= 0.497652;
+  // mesh->point[26].c[1]= 0.466967;
+  // mesh->point[26].c[2]= 0.634297;
+  // // mesh->point[6].c[0]= 0.37605;
+  // mesh->point[47].c[0]= 0.497652;
+  // mesh->point[47].c[1]= 0.467615;
+  // mesh->point[47].c[2]= 0.629645;
 
-  for (i = 1 ; i <= mesh->np ; i++)
-  {
-    printf("ref : %d  ; coord : %f %f %f \n",i-1, mesh->point[i].c[0], mesh->point[i].c[1], mesh->point[i].c[2]);
-  }
+  // for (i = 1 ; i <= mesh->np ; i++)
+  // {
+  //   printf("ref : %d  ; coord : %f %f %f \n",i-1, mesh->point[i].c[0], mesh->point[i].c[1], mesh->point[i].c[2]);
+  // }
 
 
   printf("\n //////////////////////////// BEGIN Algo ////////////////////////// \n");
@@ -253,18 +262,33 @@ int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
     // printf("corresponding Z_coord : %lld \n\n",points_Z[i-1]);
   }
 
+  // test_tab = tableau pour tester des valeurs ; à enlever à la fin
+  int *test_tab = (int*) calloc(10, sizeof(int));
+  // printf("%d\n",test_tab[8]);
+
   MMG3D_split_MIBOctree_s ( mesh,&mesh->iboctree->root[0],&mesh->iboctree );
 
   for (i = 0 ; i < mesh->np - 1 ; i++)
   {
     for (j = i+1 ; j < mesh->np ; j++)
     {
+      // if((i == 25) && (j == 46)) {
+      //   test_tab[8] = 1;
+      //   printf("i : %d, j : %d\n", i, j);
+      // }
+      // else
+      //   test_tab[8] = 0;
       // printf("i : %d ; j : %d \n",i,j);
-      MMG3D_recursive_refine( points_Z[i], points_Z[j], mesh, &mesh->iboctree->root[0], &mesh->iboctree);
+      MMG3D_recursive_refine( points_Z[i], points_Z[j], mesh, &mesh->iboctree->root[0], &mesh->iboctree, test_tab);
     }
 
   }
+  //
+  // for (j = 0; j < 8 ; j++)
+  //   printf("%d\n",test_tab[j]);
 
+
+  free(test_tab);
   free(points_Z);
   free(scaled_coord);
 
@@ -385,17 +409,24 @@ int MMG3D_octree_for_immersedBdy(MMG5_pMesh mesh, MMG5_pSol sol) {
   //   return 0;
   // }
 
+  #ifndef NDEBUG
+    // To remove when the octree creation will be ok
+    if ( !MMG3D_saveVTKMIBOctree(mesh,sol,"finalOctree.vtk") ) {
+      fprintf(stderr,"\n  ## Warning: unable to save the initial octree\n");
+    }
+  #endif
+
   /* Unscale the surface mesh and the octree */
   if ( !MMG5_unscaleMesh_i( mesh, NULL,sol,MMG3D_IMMERSRAT ) ) {
     fprintf(stderr,"\n  ## Mesh scaling problem. Exit program.\n");
     return 0;
   }
-#ifndef NDEBUG
-  // To remove when the octree creation will be ok
-  if ( !MMG3D_saveVTKMIBOctree(mesh,sol,"finalOctree.vtk") ) {
-    fprintf(stderr,"\n  ## Warning: unable to save the initial octree\n");
-  }
-#endif
+// #ifndef NDEBUG
+//   // To remove when the octree creation will be ok
+//   if ( !MMG3D_saveVTKMIBOctree(mesh,sol,"finalOctree.vtk") ) {
+//     fprintf(stderr,"\n  ## Warning: unable to save the initial octree\n");
+//   }
+// #endif
 
   printf("vtk save was done\n");
   /* Memory release */
