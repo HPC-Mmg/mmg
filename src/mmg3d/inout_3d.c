@@ -1606,7 +1606,6 @@ int MMG3D_saveVTKMIBOctree(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename) {
     fprintf(stdout,"  %%%% %s OPENED\n",data);
 
   MMG5_SAFE_FREE(data);
-
   if ( sol && sol->m ) {
     printf("  ## Warning:%s:%d: Solution saving not implemented.\n"
            "             Solution field ignored.\n",__func__,__LINE__);
@@ -1641,7 +1640,6 @@ int MMG3D_saveVTKMIBOctree(MMG5_pMesh mesh,MMG5_pSol sol,const char *filename) {
     fprintf(inm,"%d\n",cell_type);
   }
 
-  // WARNING: the solution is not saved
   fclose(inm);
 
   return 1;

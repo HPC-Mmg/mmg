@@ -59,11 +59,7 @@ int MMG3D_init_MIBOctree  ( MMG5_pMesh mesh, MMG5_pMIBOctree *q ) {
                return 0);
   MMG5_SAFE_MALLOC( *q,1, MMG5_MIBOctree, return 0);
 
-  /** Computation of maximal depth allowing the computation of the z index */
-  // nbBitsInt    = sizeof(int64_t)*8;
-  // (*q)->depth_max = nbBitsInt - 1;
-  (*q)->depth_max = 20;      //value to use
-  // (*q)->depth_max = 12;    // test value
+  (*q)->depth_max = 20;
 
 
   /** Computation of initial maximal number of cells from the number of points */
@@ -157,16 +153,13 @@ int MMG3D_newMIBOctree_s( MMG5_pMesh mesh,MMG5_pMIBOctree *root, int depth, int6
   i = (*root)->nxt;
   (*root)->nxt = (*root)->root[i].depth;
   q = (*root)->root + i;
-  // printf("%d %d %d\n", i, (*root)->root[i].depth, q );
+
   j = i % MMG3D_SIZE_OCTREESONS;
   expnt = 3*((*root)->depth_max - depth);
 
-
   q->depth  = depth;
-
   q->is_filled = 0;
   q->Z_coord = z;
-
   a = 1;
 
   if ( j == 2){
@@ -189,8 +182,6 @@ int MMG3D_newMIBOctree_s( MMG5_pMesh mesh,MMG5_pMIBOctree *root, int depth, int6
     q->Z_coord += a << (expnt + 1);
     q->Z_coord += a << (expnt + 2);
   }
-  // printf(" %d, son[%d], depth : %d , Z_coord : %lld \n", i, j, expnt/3, q->Z_coord );
-
 
   for ( i=0; i< MMG3D_SIZE_OCTREESONS; ++i ) {
     q->sons[i] = MMG3D_NOSONS; //no sons
@@ -214,7 +205,6 @@ int MMG3D_split_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctre
   int i;
 
   /* If the depth of the cell allow the subdivision */
-  // printf("\n////// Father's Z_coord : %lld /////////////\n",q->Z_coord);
   if ( q->depth+1 < (*root)->depth_max) {
     for ( i=0; i <  MMG3D_SIZE_OCTREESONS; ++i ) {
       q->sons[i] = (*root)->nxt;
@@ -225,8 +215,6 @@ int MMG3D_split_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctre
         return 0;
       }
     }
-    // q->is_filled = 0;
-
   }
   else {
     return -1;
