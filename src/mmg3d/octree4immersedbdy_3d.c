@@ -321,13 +321,11 @@ int MMG3D_refine_octreeOnTria(MMG5_pMesh mesh, MMG5_pSol sol) {
 
 
 static inline
-int MMG3D_find_octree(MMG5_pMesh mesh, MMG5_pMIBOctree *root, int64_t Z, MMG5_MIBOctree_s *in_son, int depth) {
+int MMG3D_find_octree(MMG5_pMesh mesh, MMG5_pMIBOctree *root, int64_t Z, MMG5_MIBOctree_s *q, int depth) {
 
   int i = 0;
   int64_t comp_value = 0;
-  // in_son = mesh->iboctree->root + mesh->iboctree->root[0];
-  in_son = mesh->iboctree->root ;
-  printf(" %p %p\n", mesh->iboctree->root , in_son);
+  MMG5_MIBOctree_s *in_son = mesh->iboctree->root ;
 
 
   // comp_value = (int64_t) 7 << (3*((*root)->depth_max - depth - 1));   // ie 111 << 2^{n}
@@ -338,16 +336,17 @@ int MMG3D_find_octree(MMG5_pMesh mesh, MMG5_pMIBOctree *root, int64_t Z, MMG5_MI
 
   while ( i < (*root)->depth_max && in_son->sons[0] != 0 ){
     comp_value = (int64_t) 7 << (3*((*root)->depth_max - i - 1));   // ie 111 << 2^{n}
-    MMG3D_print_Z(comp_value,0);
-    MMG3D_print_Z(Z,0);
+    // MMG3D_print_Z(comp_value,0);
+    // MMG3D_print_Z(Z,0);
     comp_value = (Z & comp_value) >> (3*((*root)->depth_max - i - 1));
     in_son = mesh->iboctree->root + in_son->sons[comp_value];
-    printf("%d %d %d %p %p\n",i , comp_value, in_son->sons[0], mesh->iboctree->root , in_son);
+    // printf("%d %d %d %p %p\n",i , comp_value, in_son->sons[0], mesh->iboctree->root , in_son);
 
     i += 1;
   }
-  printf("Dans la fonction : ");
-  MMG3D_print_Z(in_son->Z_coord,0);
+  // printf("Dans la fonction : ");
+  *q = *in_son;
+  // MMG3D_print_Z(q->Z_coord,0);
 
   // printf("%lld\n", comp_value);
   // if (comp_value == 0){
@@ -601,12 +600,16 @@ int MMG3D_balance_octree(MMG5_pMesh mesh, MMG5_pSol sol) {
   MMG5_MIBOctree_s* q_x;
   MMG5_MIBOctree_s* q_y;
   MMG5_MIBOctree_s* q_z;
+  // printf("%p %p \n", mesh->iboctree->root , q_x);
 
   MMG3D_find_octree(mesh, &mesh->iboctree, Z_x, q_x, 0);
-  printf("Pas  la fonction : ");
+  MMG3D_find_octree(mesh, &mesh->iboctree, Z_y, q_y, 0);
+  MMG3D_find_octree(mesh, &mesh->iboctree, Z_z, q_z, 0);
+  // printf("Pas  la fonction : ");
   MMG3D_print_Z(q_x->Z_coord ,0);
-  printf("%p %p \n", mesh->iboctree->root , q_x);
-
+  MMG3D_print_Z(q_y->Z_coord ,0);
+  MMG3D_print_Z(q_z->Z_coord ,0);
+  // printf("%p %p \n", mesh->iboctree->root , q_x);
   // MMG3D_find_octree(mesh, &mesh->iboctree, 29732, in_son, 0);
 
   // int depth = 0;
