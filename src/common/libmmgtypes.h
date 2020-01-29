@@ -527,6 +527,7 @@ typedef struct
   MMG5_MIBOctree_s* root; /*!<  Pointer toward the first MIBOctree cell */
   size_t            ncells_max; /*!< Maximal number of cells */
   int               depth_max; /*!< Maximal depth of the octree */
+  int               max_depth_reached; /*!< Depth of the smallest octree */
   int               nxt; /*!< pointer toward the next available octree cell */
 } MMG5_MIBOctree;
 typedef MMG5_MIBOctree  * MMG5_pMIBOctree;

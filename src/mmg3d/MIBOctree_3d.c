@@ -63,7 +63,7 @@ int MMG3D_init_MIBOctree  ( MMG5_pMesh mesh, MMG5_pMIBOctree *q ) {
   // nbBitsInt    = sizeof(int64_t)*8;
   // (*q)->depth_max = nbBitsInt - 1;
   // (*q)->depth_max = 20;      //value to use
-  (*q)->depth_max = 6;    // test value
+  (*q)->depth_max = 12;    // test value
 
 
   /** Computation of initial maximal number of cells from the number of points */
@@ -96,6 +96,7 @@ int MMG3D_init_MIBOctree  ( MMG5_pMesh mesh, MMG5_pMIBOctree *q ) {
 
   /** Creation of the 1 Cell of the minimal octree */
   (*q)->nxt   = 1;
+  (*q)->max_depth_reached   = 0;
   for ( i=0; i<MMG3D_SIZE_OCTREESONS; ++i ) {
     (*q)->root[0].sons[i] = MMG3D_NOSONS; //no sons
   }
@@ -323,7 +324,6 @@ int  MMG3D_merge_MIBOctree_s ( MMG5_pMesh mesh,MMG5_MIBOctree_s* q,MMG5_pMIBOctr
  */
 void MMG3D_count_MIBOctreeEntities(MMG5_MIBOctree_s* q,MMG5_pMIBOctree root,int *np,int *nc) {
   int k;
-
 
   if ( q->sons[0] == MMG3D_NOSONS ) {
     (*np) += 8;

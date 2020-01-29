@@ -169,6 +169,8 @@ int MMG3D_recursive_refine(int64_t a, int64_t b, MMG5_pMesh mesh, MMG5_MIBOctree
       // }
       MMG3D_split_MIBOctree_s ( mesh,in_son,&mesh->iboctree );
       in_son->is_filled = 1 ;
+      if (mesh->iboctree->max_depth_reached < in_son->depth)
+        mesh->iboctree->max_depth_reached = in_son->depth + 1;
       // test_tab[j] += 1;
     }
     // if(test_tab[8] == 1) {
@@ -232,13 +234,13 @@ int MMG3D_refine_octreeOnPoints(MMG5_pMesh mesh, MMG5_pSol sol) {
   int i = 0, j = 0, k = 0;
 
   // POINTS TESTS à ENLEVER  ou  Changer les points pour tester/////
-  // mesh->point[2].c[0]= 0.42;
-  // mesh->point[2].c[1]= 0.47;
-  // mesh->point[2].c[2]= 0.47;
-  // // mesh->point[6].c[0]= 0.37605;
-  // mesh->point[3].c[0]= 0.49;
-  // mesh->point[3].c[1]= 0.47;
-  // mesh->point[3].c[2]= 0.47;
+  mesh->point[2].c[0]= 0.42;
+  mesh->point[2].c[1]= 0.47;
+  mesh->point[2].c[2]= 0.47;
+  // mesh->point[6].c[0]= 0.37605;
+  mesh->point[3].c[0]= 0.49;
+  mesh->point[3].c[1]= 0.47;
+  mesh->point[3].c[2]= 0.47;
 
   for (i = 1 ; i <= mesh->np ; i++)
   {
@@ -408,11 +410,15 @@ int64_t MMG3D_external_neighbours(MMG5_pMIBOctree *root, int64_t Z, int depth, i
       deplacement += 3;
       i -= 1;
     }
+    if (i == 0 && a == b){
+      Z_n = -1;
+    }else{
 
-    while ( i > 0 ){
-      Z_n += (Z & ((int64_t)7 << (deplacement)));
-      deplacement += 3;
-      i -= 1;
+      while ( i > 0 ){
+        Z_n += (Z & ((int64_t)7 << (deplacement)));
+        deplacement += 3;
+        i -= 1;
+      }
     }
 
 
@@ -436,16 +442,24 @@ int64_t MMG3D_external_neighbours(MMG5_pMIBOctree *root, int64_t Z, int depth, i
       Z_n += (Z & (1 << deplacement));
       Z_n += (b^1) << (deplacement+1);
       Z_n += (Z & (1 << (deplacement+2)));
+      // MMG3D_print_Z(Z ,0);
+      // MMG3D_print_Z(1 << deplacement ,0);
+      // MMG3D_print_Z((b^1) << (deplacement+1) ,0);
+      // MMG3D_print_Z(1 << (deplacement+2) ,0);
 
       comp_value = comp_value << 3;
       deplacement += 3;
       i -= 1;
     }
+    if (i == 0 && a == b){
+      Z_n = -1;
+    }else{
 
-    while ( i > 0 ){
-      Z_n += (Z & ((int64_t)7 << (deplacement)));
-      deplacement += 3;
-      i -= 1;
+      while ( i > 0 ){
+        Z_n += (Z & ((int64_t)7 << (deplacement)));
+        deplacement += 3;
+        i -= 1;
+      }
     }
 
 
@@ -472,11 +486,15 @@ int64_t MMG3D_external_neighbours(MMG5_pMIBOctree *root, int64_t Z, int depth, i
       deplacement += 3;
       i -= 1;
     }
+    if (i == 0 && a == b){
+      Z_n = -1;
+    }else{
 
-    while ( i > 0 ){
-      Z_n += (Z & ((int64_t)7 << (deplacement)));
-      deplacement += 3;
-      i -= 1;
+      while ( i > 0 ){
+        Z_n += (Z & ((int64_t)7 << (deplacement)));
+        deplacement += 3;
+        i -= 1;
+      }
     }
 
 
@@ -499,10 +517,12 @@ int64_t MMG3D_external_neighbours(MMG5_pMIBOctree *root, int64_t Z, int depth, i
 static inline
 int MMG3D_split_in_balance(MMG5_pMesh mesh, MMG5_MIBOctree_s *q, MMG5_pMIBOctree *root, int64_t Z, int deepest) {
 
-  printf("%d %d\n", q->depth, deepest);
   if (q->is_filled == 0){
     MMG3D_split_MIBOctree_s ( mesh,q,&mesh->iboctree );
+    q->is_filled = 1 ;
+
   }
+
   MMG5_MIBOctree_s* in_son = mesh->iboctree->root + q->sons[0];
 
   if (in_son->depth + 1 < deepest ){
@@ -513,7 +533,9 @@ int MMG3D_split_in_balance(MMG5_pMesh mesh, MMG5_MIBOctree_s *q, MMG5_pMIBOctree
     MMG3D_print_Z(Z ,0);
 
     son_number = (Z & son_number) >> deplacement;
-    // abort();
+    printf("%lld\n", son_number);
+    printf("____________________________\n");
+
     MMG3D_split_in_balance(mesh,mesh->iboctree->root + q->sons[son_number], &mesh->iboctree, Z, deepest);
   }
 
@@ -534,7 +556,6 @@ static inline
 int MMG3D_recursive_balance(MMG5_pMesh mesh, MMG5_MIBOctree_s *q, MMG5_pMIBOctree *root, int deepest) {
 
   int k = 0;
-  printf("%d\n", deepest);
 
   if (q->depth == deepest ){
     int64_t Z_x;
@@ -549,16 +570,17 @@ int MMG3D_recursive_balance(MMG5_pMesh mesh, MMG5_MIBOctree_s *q, MMG5_pMIBOctre
     q_x = MMG3D_find_octree(mesh, &mesh->iboctree, Z_x);
     q_y = MMG3D_find_octree(mesh, &mesh->iboctree, Z_y);
     q_z = MMG3D_find_octree(mesh, &mesh->iboctree, Z_z);
-    if (q_x->depth + 1 < deepest )
+    if (q_x->depth + 1 < deepest && Z_x >= 0)
       MMG3D_split_in_balance(mesh, q_x, &mesh->iboctree, Z_x, deepest);
-    if (q_y->depth + 1 < deepest )
+    if (q_y->depth + 1 < deepest && Z_y >= 0)
       MMG3D_split_in_balance(mesh, q_y, &mesh->iboctree, Z_y, deepest);
-    if (q_z->depth + 1 < deepest )
+    if (q_z->depth + 1 < deepest && Z_z >= 0)
       MMG3D_split_in_balance(mesh, q_z, &mesh->iboctree, Z_z, deepest);
+    if (Z_x < 0 || Z_y < 0 || Z_z < 0)
+      printf("%d %lld %lld %lld\n", q->depth,Z_x,Z_y,Z_z );
 
   }else if (q->sons[0] != 0){
     for (k = 0 ; k < MMG3D_SIZE_OCTREESONS ; k++){
-      printf("%d %d\n", q->depth, k);
 
       MMG5_MIBOctree_s* son = mesh->iboctree->root + q->sons[k];
 
@@ -615,26 +637,31 @@ int MMG3D_balance_octree(MMG5_pMesh mesh, MMG5_pSol sol) {
   q_x = MMG3D_find_octree(mesh, &mesh->iboctree, Z_x);
   q_y = MMG3D_find_octree(mesh, &mesh->iboctree, Z_y);
   q_z = MMG3D_find_octree(mesh, &mesh->iboctree, Z_z);
-  MMG3D_print_Z(q_x->Z_coord ,0);
-  MMG3D_print_Z(q_y->Z_coord ,0);
-  MMG3D_print_Z(q_z->Z_coord ,0);
+  // MMG3D_print_Z(q_x->Z_coord ,0);
+  // MMG3D_print_Z(q_y->Z_coord ,0);
+  // MMG3D_print_Z(q_z->Z_coord ,0);
   printf("*******************************\n");
 
 
-  // MMG3D_split_in_balance(mesh, q_x, &mesh->iboctree, Z_x, 1);
-  // MMG3D_split_in_balance(mesh, q_y, &mesh->iboctree, Z_y, 1);
-  // MMG3D_split_in_balance(mesh, q_z, &mesh->iboctree, Z_z, 1);
+  MMG3D_split_in_balance(mesh, q_x, &mesh->iboctree, Z_x, 4);
+  printf("----------------------------------------\n");
+  MMG3D_split_in_balance(mesh, q_y, &mesh->iboctree, Z_y, 4);
+  printf("----------------------------------------\n");
+  MMG3D_split_in_balance(mesh, q_z, &mesh->iboctree, Z_z, 4);
 
   printf("----------------------------------------\n");
+  // int64_t test = -1;
+  // printf("%lld\n", test);
 
-  // MMG3D_recursive_balance(mesh, mesh->iboctree->root + mesh->iboctree->root[0].sons[0], &mesh->iboctree, 4);
+  // MMG3D_recursive_balance(mesh, mesh->iboctree->root + mesh->iboctree->root[0].sons[0], &mesh->iboctree, 0);
   //
-  int depth = 0;
-  int i = 0;
-  for (depth = mesh->iboctree->depth_max ; depth > 1 ; depth -= 1){
-    for (i = 0 ; i < MMG3D_SIZE_OCTREESONS ; i ++)
-      MMG3D_recursive_balance(mesh, mesh->iboctree->root + mesh->iboctree->root[0].sons[i], &mesh->iboctree, depth);
-  }
+  printf("%d\n", mesh->iboctree->max_depth_reached);
+  // int depth = 0;
+  // int i = 0;
+  // for (depth = mesh->iboctree->max_depth_reached ; depth > 1 ; depth -= 1){
+  //   for (i = 0 ; i < MMG3D_SIZE_OCTREESONS ; i ++)
+  //     MMG3D_recursive_balance(mesh, mesh->iboctree->root + mesh->iboctree->root[0].sons[i], &mesh->iboctree, depth);
+  // }
 
 
 
