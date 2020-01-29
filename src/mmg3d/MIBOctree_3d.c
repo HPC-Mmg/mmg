@@ -62,8 +62,8 @@ int MMG3D_init_MIBOctree  ( MMG5_pMesh mesh, MMG5_pMIBOctree *q ) {
   /** Computation of maximal depth allowing the computation of the z index */
   // nbBitsInt    = sizeof(int64_t)*8;
   // (*q)->depth_max = nbBitsInt - 1;
-  // (*q)->depth_max = 20;      //value to use
-  (*q)->depth_max = 12;    // test value
+  (*q)->depth_max = 20;      //value to use
+  // (*q)->depth_max = 12;    // test value
 
 
   /** Computation of initial maximal number of cells from the number of points */
